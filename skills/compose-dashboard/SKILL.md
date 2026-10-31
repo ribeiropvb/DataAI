@@ -4,7 +4,7 @@ description: Produz o dashboard HTML real de uma análise do DataAI a partir dos
 metadata:
   project: DataAI
   agent: interface-designer
-  spec: specs.md v1.2 (RF-010, RF-012, RN-005, RN-006, RN-008, RN-012, RN-015, CA-009 a CA-011, CA-019)
+  spec: specs.md v1.3 (RF-010, RF-012, RN-005, RN-006, RN-008, RN-012, RN-015, CA-009 a CA-011, CA-019)
 ---
 
 # compose-dashboard
@@ -44,8 +44,16 @@ Limitações e suposições **não** entram no HTML; elas vão para o resumo da 
 
 ## Implementação
 
-- Um único arquivo `deliverables/v<N>/dashboard.html`, autossuficiente: dados embutidos em JSON no próprio arquivo.
-- Biblioteca de gráficos por CDN com versão fixa (por exemplo, ECharts ou Plotly). Registre a versão usada.
+- Ferramenta `build_dashboard` (`dataai/tools/dashboard.py`) com a configuração:
+  ```json
+  { "title": "Vendas 2024–2025", "subtitle": "Período: jan/2024 a mar/2025",
+    "kpis": [ { "label": "Receita", "result_id": "res_receita_total", "path": "sum", "format": "currency_brl_compact" } ],
+    "views": [ { "name": "Visão geral", "charts": ["ch_receita_mes", "ch_receita_loja"] } ],
+    "detail_table": "ch_tabela_lojas" }
+  ```
+  `path` usa a mesma sintaxe dos marcadores do relatório (`valor`, `rows[group=Online].value`). A ferramenta recusa texto narrativo na configuração.
+- Um único arquivo `deliverables/v<N>/dashboard.html`, autossuficiente: dados embutidos em `<script id="dataai-data">` (lido pela validação).
+- ECharts 5.5.1 por CDN com versão fixa, ou embutido quando `DATAAI_ECHARTS_JS` aponta para uma cópia local (uso sem internet).
 - Os números vêm **somente** de `results/*.json`. Não recalcule, não digite valores à mão.
 - Use as cores de `design-charts` e o `color_map`. Mesma categoria, mesma cor em todos os gráficos e filtros.
 - Formate números no padrão do usuário (pt-BR: `1.234,56`; percentuais com uma casa).
@@ -61,7 +69,7 @@ Limitações e suposições **não** entram no HTML; elas vão para o resumo da 
 
 ## Antes de entregar
 
-1. Abra o HTML em navegador headless (Playwright) em larguras ampla, média e de celular e tire capturas para `review/screens/`.
+1. Rode `inspect_dashboard` (com `attach_screens: true` para ver as capturas). Ela abre o HTML em navegador headless em 1440, 900 e 390 px, salva capturas em `review/screens_v<N>/`, confere se cada gráfico pintou o canvas, erros no console, rolagem horizontal, abas e o texto dos tooltips.
 2. Confira que todos os gráficos renderizaram e que não há erros no console.
 3. Varra todo o texto visível, tooltips e atributos `title`/`alt` procurando linguagem interpretativa.
 4. Teste cada filtro e cada aba.

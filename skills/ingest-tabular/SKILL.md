@@ -4,12 +4,21 @@ description: Lê arquivos CSV e Excel (.xlsx) enviados para uma análise do Data
 metadata:
   project: DataAI
   agent: data-specialist
-  spec: specs.md v1.2 (RF-001, RF-002, RF-016, RN-003, P-001, P-002, P-013)
+  spec: specs.md v1.3 (RF-001, RF-002, RF-016, RN-003, P-001, P-002, RF-023, RN-019, 12.8.1, P-013)
 ---
 
 # ingest-tabular
 
 Transforma os arquivos recebidos em datasets de trabalho confiáveis, sem perder nada em silêncio. Esta skill não interpreta o significado dos dados; isso é papel de `profile-data`.
+
+## Ferramentas
+
+Executada pelo código antes dos agentes: `dataai/tools/ingest.py` (`ingest(ws)`), chamado por `python -m dataai analisar`. O agente `data-specialist` lê o resultado com `list_datasets` e `preview_rows`.
+
+- Vários arquivos por análise (até 10, 50 MB no total). Cada CSV é uma tabela; cada aba `.xlsx` com dados é uma tabela (P-001).
+- Cada tabela guarda arquivo, aba, hash e a **origem** informada pelo usuário (`--origem arquivo=rótulo`); sem ela, a origem é o nome do arquivo (12.8.1).
+- Cada linha do Parquet em `working/` recebe `_source_file` e `_source_sheet` (RN-019), usados depois para empilhar partições e rastrear a linhagem.
+- Detecção automática de codificação (utf-8, cp1252, latin-1), delimitador, separador decimal (pt-BR ou en), percentuais, datas (ordem ambígua vira pergunta) e códigos com zeros à esquerda (mantidos como texto).
 
 ## Entrada
 

@@ -4,12 +4,20 @@ description: Escolhe e especifica os gráficos de uma análise do DataAI a parti
 metadata:
   project: DataAI
   agent: visualization-specialist
-  spec: specs.md v1.2 (RF-011, RF-012, RN-006, RN-012)
+  spec: specs.md v1.3 (RF-011, RF-012, RN-006, RN-012)
 ---
 
 # design-charts
 
 Define **o que** cada gráfico mostra e **como**, de forma que o relatório e o dashboard usem os mesmos visuais e as mesmas cores. Esta skill não desenha o HTML nem o PDF.
+
+## Ferramentas
+
+`suggest_chart` (proposta de especificação a partir de um resultado), `save_chart` (valida e salva `charts/<chart_id>.json`; devolve os problemas se a especificação não bater com o resultado), `list_charts`, `get_result`, `list_results`. Código: `dataai/tools/charts.py`.
+
+- Tipos suportados: `kpi`, `bar_horizontal`, `column`, `line`, `histogram`, `heatmap`, `pareto`, `waterfall` (pontes de M10) e `table`.
+- A mesma especificação gera a imagem do PDF (`render_png`, matplotlib) e o gráfico interativo do dashboard (`echarts_option`, ECharts 5.5.1), com as mesmas cores (`ColorMap`).
+- Formatos de número: `integer`, `decimal_1`, `decimal_2`, `percent_0/1/2`, `pp_1`, `currency_brl`, `currency_brl_compact`, `compact`, `days`, `index`, `coef` (pt-BR).
 
 ## Entrada
 

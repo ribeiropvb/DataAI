@@ -4,12 +4,25 @@ description: Revisa criticamente as entregas finais de uma análise do DataAI (P
 metadata:
   project: DataAI
   agent: quality-orchestrator
-  spec: specs.md v1.2 (RF-013 a RF-015, RN-006, RN-009 a RN-012, RN-015, 8.3, 12.3, P-012, CA-014 a CA-019)
+  spec: specs.md v1.3 (RF-013 a RF-015, RN-006, RN-009 a RN-012, RN-015, 8.3, 12.3, P-012, CA-014 a CA-019, CA-031, RN-016)
 ---
 
 # orchestrate-quality-review
 
 É a última barreira antes do usuário. Examina **os arquivos gerados e renderizados**, nunca apenas a descrição que o agente produtor deu deles.
+
+## Ferramentas
+
+Verificações determinísticas que rodam sempre, com ou sem IA (`dataai/review.py`, `deterministic_review`). O agente `quality-orchestrator` acrescenta o julgamento (storytelling, estética), mas **não pode aprovar** o que estas verificações reprovam:
+
+- formato pedido gerado; narrativa e parágrafos no dashboard; tooltips interpretativos;
+- renderização: erros de console, gráficos que não pintaram, rolagem horizontal;
+- PDF: páginas vazias, marcadores inválidos, números digitados sem marcador, seção de limitações, pergunta do usuário no início;
+- achados sem magnitude, referência ou confiabilidade (CA-031);
+- abrangência (RN-016): entregas que usam só M1–M4 quando os dados permitem duas ou mais famílias de decisão;
+- problemas da validação técnica.
+
+Ferramentas do agente: `inspect_dashboard`, `inspect_report` (com capturas), `run_validation`, `get_result`, `list_results`, `list_charts`. O ciclo de correção é conduzido por `dataai/orchestrator.py` (até 3 ciclos, P-012).
 
 ## Entrada
 

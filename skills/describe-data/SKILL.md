@@ -1,83 +1,106 @@
 ---
 name: describe-data
-description: Calcula com código as métricas, estatísticas descritivas, agregações e séries temporais definidas no plano de uma análise do DataAI, registrando fórmula, população e origem de cada número. Use depois de plan-analysis (e de relate-datasets, quando houver junções) e antes de gráficos e entregas.
+description: Calcula com as ferramentas do DataAI as métricas do plano (catálogo M1–M15: qualidade, volume, posição, dispersão, composição, concentração, tempo, referência, taxas, decomposição, entidades, prazos, associação, reconciliação entre fontes e sensibilidade), registrando fórmula, população e origem de cada número. Use depois de plan-analysis (e de relate-datasets, quando houver junções) e antes de gráficos e entregas.
 metadata:
   project: DataAI
   agent: data-analyst
-  spec: specs.md v1.2 (RF-006, RF-018, RF-019, 12.4, P-016)
+  spec: specs.md v1.3 (RF-006, RF-018, RF-019, RF-022, RN-016, 12.7, P-016)
 ---
 
 # describe-data
 
-Produz todos os números da análise. Gráficos, relatório e dashboard só podem usar números que saem daqui.
+Produz todos os números da análise. Gráficos, relatório e dashboard só podem usar números que saem daqui. Você nunca calcula de cabeça: toda métrica é uma chamada a `compute_metric`, que executa pandas, salva o resultado e guarda a especificação para ser reexecutada na auditoria.
 
-## Entrada
+## Ferramentas
 
-- Plano de `plan-analysis` (métricas e análises).
-- Datasets em `working/` e regras de agregação de `relate-datasets`.
-
-## Convenções estatísticas [proposta MVP, P-016]
-
-| Item | Convenção |
+| Ferramenta | Uso |
 |---|---|
-| Desvio-padrão | amostral, `ddof=1` |
-| Quantis | método linear (`numpy`/`pandas` padrão `linear`) |
-| Intervalo interquartil | Q3 − Q1 |
-| Valores extremos | sinalizados fora de Q1 − 1,5·IQR e Q3 + 1,5·IQR; nunca removidos automaticamente |
-| Ausentes | excluídos do cálculo da métrica, com a contagem de excluídos registrada |
-| Precisão | precisão total no armazenamento; arredondamento só na apresentação |
-| Percentuais | guardados como fração (0,153); a apresentação converte para 15,3% |
+| `list_metric_functions` | Catálogo de funções com família e parâmetros. |
+| `list_datasets`, `get_profile` | Colunas, tipos semânticos, chaves e famílias aplicáveis. |
+| `compute_metric` | Calcula e salva uma métrica (`results/<result_id>.json`, com versão). |
+| `get_result`, `list_results` | Lê resultados já salvos. |
+
+Código: `dataai/tools/metrics.py` (`compute`, `CATALOG`).
+
+## Especificação de uma métrica
+
+```json
+{
+  "metric_id": "res_receita_mes",
+  "label": "Receita mensal",
+  "function": "time_series",
+  "dataset_id": "ds_vendas",
+  "params": { "date_col": "data_venda", "measure": "valor_total", "agg": "sum", "freq": "M" },
+  "filters": [ { "column": "status", "op": "!=", "value": "cancelada" } ],
+  "unit": "R$",
+  "formula": "soma de valor_total por mês",
+  "population": "vendas não canceladas"
+}
+```
+
+- `metric_id` vira o `result_id` e é usado nos marcadores do relatório.
+- Funções de reconciliação (M14) recebem também `dataset_id_b`.
+- Operadores de filtro: `== != > >= < <= in not_in is_null not_null contains between` (texto sem diferenciar maiúsculas).
+- A ferramenta recusa colunas inexistentes e agregação numérica de `identifier`. O erro volta para você corrigir a especificação, nunca para trocar a métrica em silêncio.
+
+## Catálogo (specs 12.7)
+
+| Família | Pergunta de decisão | Funções |
+|---|---|---|
+| M1 Qualidade | Posso confiar? | `quality_completeness`, `quality_uniqueness`, `quality_validity`, `quality_consistency`, `quality_temporal_coverage` |
+| M2 Volume | Quanto? | `volume_counts` |
+| M3 Posição | Quão típico? | `position_stats` |
+| M4 Dispersão e forma | Quão variável? Há extremos? | `dispersion_shape` |
+| M5 Composição | Onde está o volume? | `frequency_table`, `share_of_total`, `crosstab` |
+| M6 Concentração | Poucos respondem por muito? | `concentration` (top N, Gini, HHI), `pareto_abc` |
+| M7 Tempo | Para onde está indo? | `time_series`, `period_change`, `trend_summary`, `seasonal_profile` |
+| M8 Referência | Em relação a quê? | `group_comparison`, `compare_to_reference` (meta, P-019) |
+| M9 Taxas e funis | Qual a proporção? | `rate`, `funnel`, `simpson_check` |
+| M10 Decomposição | O que explica a variação? | `contribution_to_change`, `mix_rate_decomposition` |
+| M11 Entidades | Quem são e como se comportam? | `entity_rfm`, `cohort_retention`, `new_vs_returning` |
+| M12 Prazos | Os prazos são cumpridos? | `durations`, `deadline_compliance` |
+| M13 Associação | O que varia junto? | `association` (Pearson, Spearman, V de Cramér, eta) |
+| M14 Fontes | As fontes concordam? | `source_coverage`, `reconcile_measure`, `attribute_divergence` |
+| M15 Sensibilidade | O resultado é robusto? | `sensitivity` |
 
 ## Procedimento
 
-1. **Calcule com pandas**, nunca de cabeça. Para cada análise do plano:
-   - aplique população e filtros da métrica;
-   - agrupe conforme `group_by`;
-   - calcule o que for pertinente ao tipo: contagens, distintos, soma, média, mediana, mínimo, máximo, quartis, IQR, desvio-padrão, frequências absolutas e relativas, participação no total, variação entre períodos.
-2. **Respeite os tipos semânticos:** `identifier` só em contagens; `category` em frequências; `measure` em estatísticas numéricas.
-3. **Respeite as regras de agregação** de `relate-datasets` (por exemplo, somar medida do pai por chave distinta).
-4. **Taxas:** registre numerador e denominador separados. Divisão por zero resulta em ausente com aviso `division_by_zero`, nunca em zero.
-5. **Séries temporais:** declare a granularidade (dia, semana, mês). Períodos incompletos no início ou fim da série são marcados com `partial_period: true`.
-6. **Grupos pequenos:** médias e taxas de grupos com menos de 30 observações recebem `small_sample: true`, para o relatório não tirar conclusão forte delas.
-7. **Totais de controle:** para cada resultado agrupado, confira que a soma dos grupos bate com o total geral (quando a métrica é aditiva).
-8. Salve cada resultado em `results/<result_id>.json` com os dados e os metadados abaixo. Se um resultado for recalculado em correção, salve uma nova versão do mesmo `result_id`.
+1. Leia o plano e confira, em `get_profile`, que cada métrica é aplicável (`applicable_families`).
+2. Calcule cada métrica do plano com `compute_metric`. Use a granularidade, filtros e população do plano.
+3. Para a métrica principal, calcule também `sensitivity` (M15). Se `sensitive: true`, isso vai para o relatório.
+4. Taxas: use `rate`, que guarda numerador e denominador. Quando houver estratos, rode `simpson_check`; um aviso de Simpson é obrigatório no relatório.
+5. Variação entre períodos: complemente `period_change` com `contribution_to_change` ou `mix_rate_decomposition` para dizer de onde vem a mudança.
+6. Mesma medida em duas fontes: rode `reconcile_measure` ou `attribute_divergence`; não escolha uma fonte como oficial (P-020).
+7. Leia `flags` e `warnings` de cada resultado (`small_sample`, `partial_period`, `division_by_zero`, `sensitive`, `simpson`) e repasse no resultado da skill.
+8. Se um cálculo falhar, corrija a especificação. Se for impossível como planejado, devolva o motivo.
 
-## Regras
+## Convenções (specs 12.7.5)
 
-- Não atribua causa, não calcule p-valor, não faça previsão (MVP descritivo).
-- Associação descritiva (por exemplo, correlação de Pearson ou Spearman) pode ser calculada quando o plano pedir, sempre com o tamanho da amostra e sem linguagem causal.
-- Se um cálculo não puder ser feito como planejado (coluna com muitos ausentes, população vazia), devolva o motivo; não troque a métrica em silêncio.
+- Desvio-padrão amostral (`ddof=1`); quantis lineares; percentuais guardados como fração; precisão total, arredondamento só na apresentação.
+- Ausentes são excluídos e contados; divisão por zero gera ausente com aviso, nunca zero.
+- Grupos com n < 30 recebem `small_sample`; períodos incompletos, `partial_period`.
+- Extremos são sinalizados (1,5·IQR e z robusto > 3,5), nunca removidos.
+- Sem p-valor, previsão ou causa (P-014). Associação usa linguagem descritiva: |r| < 0,3 fraca, 0,3 a 0,5 moderada, ≥ 0,5 forte.
 
 ## Resultado
 
 ```json
 {
   "results": [
-    {
-      "result_id": "res_evasao_por_curso",
-      "version": 1,
-      "metric_id": "m_evasao_1ano",
-      "analysis_item_id": "a1",
-      "path": "results/res_evasao_por_curso.json",
-      "group_by": ["curso"],
-      "rows": 12,
-      "population_rows": 4830,
-      "excluded_missing": 17,
-      "flags": { "small_sample_groups": ["Música"], "partial_periods": [] },
-      "control_total": { "expected": 4830, "obtained": 4830, "ok": true },
-      "code_ref": "review/code/res_evasao_por_curso.py"
-    }
-  ]
+    { "result_id": "res_receita_mes", "family": "M7", "function": "time_series", "n": 3373, "excluded": 0,
+      "flags": { "partial_period": ["2025-03"] }, "warnings": [] }
+  ],
+  "decision_questions_covered": ["Para onde está indo?", "Onde está o volume?", "Posso confiar?"],
+  "failed": []
 }
 ```
-
-Guarde o código usado em cada cálculo (`code_ref`) para a auditoria de `validate-analysis`.
 
 O envelope comum está descrito em `skills/README.md`.
 
 ## Checklist antes de concluir
 
-- [ ] Todo número veio de código salvo e reexecutável.
+- [ ] Todo número veio de `compute_metric` (reexecutável).
 - [ ] Toda taxa tem numerador e denominador.
-- [ ] Totais de controle conferidos.
-- [ ] Grupos pequenos e períodos parciais sinalizados.
+- [ ] A métrica principal tem sensibilidade calculada.
+- [ ] O conjunto cobre pelo menos duas perguntas de decisão além de "quanto" (RN-016), quando os dados permitem.
+- [ ] Avisos e sinais de cada resultado foram repassados.

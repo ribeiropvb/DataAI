@@ -4,12 +4,24 @@ description: Audita tecnicamente uma análise do DataAI, reexecutando cálculos,
 metadata:
   project: DataAI
   agent: technical-reviewer
-  spec: specs.md v1.2 (RF-013, RN-009, RN-010, 9.3, 12.3, 12.4)
+  spec: specs.md v1.3 (RF-013, RN-009, RN-010, 9.3, 12.3, 12.4, 12.7.5, 12.8)
 ---
 
 # validate-analysis
 
 Responde à pergunta: **os números estão certos e são os mesmos em todo lugar?** Não avalia storytelling nem estética; isso é de `orchestrate-quality-review`.
+
+## Ferramentas
+
+`run_validation` (`dataai/tools/validate.py`), que executa as verificações abaixo de forma determinística e devolve `decision`, `checks` e `issues`. O agente `technical-reviewer` interpreta o resultado e pode conferir pontos com `get_result`, `list_results`, `inspect_report` e `inspect_dashboard`. A ferramenta verifica:
+
+- envelopes das skills e perguntas sem resposta nem suposição;
+- hash dos arquivos originais, tratamentos sem autorização, totais de controle das junções e linhas dos empilhamentos;
+- **reexecução** de toda métrica pela especificação salva, comparando valores e linhas;
+- taxas com numerador maior que o denominador;
+- cada `number_ref` do PDF contra o resultado atual (valor formatado e versão) e presença no texto extraído;
+- KPIs e dados dos gráficos embutidos no HTML contra os resultados atuais;
+- mesmo indicador no PDF e no HTML.
 
 ## Entrada
 

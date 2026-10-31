@@ -1,8 +1,8 @@
 # DataAI — Especificação consolidada da aplicação
 
 **Arquivo:** `specs.md`  
-**Versão do documento:** 1.2  
-**Data da consolidação:** 24/10/2026 (revisão 1.2 em 31/10/2026)  
+**Versão do documento:** 1.3  
+**Data da consolidação:** 24/10/2026 (revisões 1.2 e 1.3 em 31/10/2026)  
 **Idioma:** português  
 **Base:** decisões e artefatos discutidos nesta conversa até a solicitação desta especificação.
 
@@ -50,6 +50,8 @@ O produto é multidomínio: não está limitado a e-commerce. O assunto das aná
 
 O sistema deve considerar relações entre tabelas quando elas fizerem parte da análise. A existência de vários arquivos não determina, sozinha, uma união entre eles.
 
+**Revisão 1.3 (confirmado pelo usuário):** as métricas não se limitam a posição e dispersão. Elas devem ser abrangentes o suficiente para apoiar tomadas de decisão e aceitar insumos de origens e fontes diferentes. As tabelas nem sempre estarão em um único arquivo: uma mesma tabela pode vir dividida em vários arquivos e várias tabelas podem estar relacionadas entre arquivos. O sistema deve descobrir essas ligações a partir dos próprios dados, com evidência (seções 12.7 e 12.8).
+
 ## 3. Escopo
 
 ### 3.1. Funcionalidades confirmadas para a primeira versão
@@ -58,6 +60,9 @@ O sistema deve considerar relações entre tabelas quando elas fizerem parte da 
 - Análise direcionada por pergunta do usuário.
 - Exploração geral dos dados sem exigir uma pergunta específica.
 - Análises descritivas e identificação de achados sobre os dados.
+- Métricas abrangentes e orientadas à decisão, além de posição e dispersão (RF-022, seção 12.7).
+- Tabelas distribuídas em vários arquivos ou abas, com descoberta automática das ligações entre eles (RF-023, RF-024, seção 12.8).
+- Insumos de origens diferentes, com rastreabilidade e reconciliação (RF-025).
 - Análise de conjuntos de arquivos relacionados, sem restringir o produto a um arquivo ou a uma tabela.
 - Geração de relatório PDF com interpretação dos resultados.
 - Geração de dashboard HTML sem narrativa interpretativa.
@@ -106,6 +111,18 @@ Agentes especializados e orquestrador são componentes do processamento, não pe
 | Unidade de observação | O que uma linha representa: por exemplo, uma pessoa, um evento, um item ou um agregado. |
 | Relação entre tabelas | Vínculo usado para combinar informações, cuja interpretação depende das chaves e da unidade de observação. |
 | Cardinalidade | Quantidade de correspondências entre chaves de duas tabelas, como um para um ou um para muitos. |
+| Chave composta | Combinação de duas ou mais colunas que, juntas, identificam uma linha (por exemplo, pedido + item). |
+| Integridade referencial | Grau em que os valores de uma chave estrangeira encontram correspondência na tabela referenciada. Valores sem correspondência são **órfãos**. |
+| Partição | Parte de uma mesma tabela entregue em arquivo ou aba separada (por exemplo, um arquivo por mês ou por filial). Partições são **empilhadas**, não juntadas. |
+| Empilhamento (união) | Concatenação de linhas de partições com o mesmo esquema, mantendo a identificação do arquivo de origem de cada linha. |
+| Junção | Combinação de colunas de tabelas diferentes por meio de uma chave. |
+| Papel da tabela | Classificação descritiva de uma tabela no conjunto: fato (eventos com medidas), dimensão (cadastro), ponte (liga duas tabelas em muitos para muitos), agregada (granularidade mais grossa), referência ou isolada. |
+| Grão | Nível de detalhe de uma tabela, equivalente à sua unidade de observação. Juntar tabelas de grãos diferentes exige agregar antes. |
+| Fan-out (multiplicação) | Aumento indevido de linhas ao juntar tabelas, que faz medidas serem somadas mais de uma vez. |
+| Linhagem (origem) | Registro de quais arquivos, abas, colunas e tratamentos produziram um dataset ou resultado. |
+| Reconciliação | Comparação de uma mesma medida ou entidade presente em fontes diferentes para medir cobertura e divergência. |
+| Família de métricas | Grupo do catálogo da seção 12.7 (qualidade, composição, concentração, tendência etc.). |
+| Referência (benchmark) | Valor contra o qual um resultado é comparado: meta, período anterior, média geral, outro grupo ou outra fonte. |
 | Métrica | Medida definida para uma análise. Seu significado, cálculo e tratamentos devem ser conservados no histórico. |
 | Tratamento | Conversão ou transformação aplicada aos dados para uma análise. As condições para execução autônoma ainda não foram aprovadas. |
 | Resultado | Valor, tabela ou estrutura produzida pelo processamento dos dados. |
@@ -203,6 +220,22 @@ As instruções especializadas do projeto devem ser organizadas em pastas com `S
 ### RF-021 — Permitir uso sem programação pelo público inicial
 
 O fluxo principal deve permitir enviar arquivos, descrever a intenção e receber as entregas sem exigir do usuário escrita de Python, SQL, código de agentes ou configuração de skills.
+
+### RF-022 — Calcular métricas abrangentes e orientadas à decisão
+
+A aplicação deve dispor de métricas que vão além de posição (média, mediana) e dispersão (desvio-padrão, quartis). O catálogo cobre qualidade e confiabilidade dos dados, volume, forma da distribuição, composição, concentração, evolução no tempo, comparação com referências, taxas e funis, decomposição de variações, comportamento de entidades e coortes, prazos e durações, associação descritiva, reconciliação entre fontes e sensibilidade dos resultados. A seleção depende dos dados e do objetivo; não se executa o catálogo inteiro em toda análise. O catálogo, as condições de uso e as convenções estão na seção 12.7. Confirmado na revisão 1.3; os detalhes do catálogo são **[proposta MVP]** (P-016).
+
+### RF-023 — Trabalhar com tabelas distribuídas em vários arquivos
+
+Uma análise pode receber uma mesma tabela dividida em vários arquivos ou abas (partições por período, filial, região etc.) e várias tabelas diferentes espalhadas por arquivos e abas. A aplicação deve identificar quais arquivos são partições de uma mesma tabela, empilhá-las preservando a origem de cada linha e tratar as demais como tabelas distintas. Regras na seção 12.8. Confirmado na revisão 1.3.
+
+### RF-024 — Descobrir ligações entre arquivos
+
+A aplicação deve descobrir, a partir dos próprios dados, as chaves e relações candidatas entre tabelas de arquivos diferentes, sem exigir que o usuário as informe. Cada ligação descoberta deve trazer evidência: colunas envolvidas, correspondência de valores, cardinalidade observada e integridade referencial (órfãos). A descoberta não autoriza usar uma ligação que a análise não pede (RN-003). Regras na seção 12.8. Confirmado na revisão 1.3.
+
+### RF-025 — Aceitar insumos de origens diferentes
+
+Arquivos podem vir de sistemas, setores ou fontes diferentes, com nomes de colunas, códigos, formatos de data, unidades e granularidades distintos. A aplicação deve registrar a origem (linhagem) de cada dataset, coluna derivada e resultado; harmonizar formatos de forma registrada; e, quando duas fontes trouxerem a mesma medida ou entidade, medir cobertura e divergência entre elas em vez de escolher uma em silêncio. Confirmado na revisão 1.3; política de conflitos em P-020.
 
 ## 7. Regras de negócio confirmadas
 
@@ -303,6 +336,30 @@ Toda solicitação concluída gera, além das entregas pedidas, um **resumo da e
 O resumo da execução não é relatório nem dashboard: não contém análise interpretativa dos achados, que continua exclusiva do PDF. Quando somente o dashboard for pedido, é por ele que o usuário recebe as limitações, sem violar RN-006. O formato técnico (por exemplo, mensagem na interface ou arquivo Markdown) será definido junto da interface (P-018).
 
 **Relacionamentos:** RN-006, RN-008, RF-017, RF-018; resolve P-011.
+
+### RN-016 — Métricas não se limitam a posição e dispersão
+
+Toda análise deve considerar, entre as famílias aplicáveis do catálogo (12.7), as que ajudam a decidir: onde está o volume ou o problema (composição e concentração), para onde está indo (tendência), em relação a quê (referência), o que explica a variação (decomposição) e quanto se pode confiar no número (qualidade e sensibilidade). Uma análise composta apenas de médias, medianas e desvios, quando os dados permitem mais, é incompleta e deve ser apontada pela revisão.
+
+**Relacionamentos:** RF-006, RF-022; CA-026, CA-031.
+
+### RN-017 — Um arquivo não é uma tabela
+
+Arquivo, aba e tabela são coisas diferentes. Uma tabela pode estar em vários arquivos (partições) e um arquivo pode ter várias tabelas (abas). Partições são empilhadas; tabelas diferentes só se juntam por chave verificada. Empilhar tabelas de esquemas diferentes ou juntar partições é defeito.
+
+**Relacionamentos:** RF-023, RN-003; CA-027.
+
+### RN-018 — Ligações exigem evidência nos dados
+
+Uma ligação entre tabelas só pode ser usada quando houver evidência nos valores (correspondência e cardinalidade medidas). Nome de coluna parecido é indício, não prova. Toda ligação usada é declarada no resumo da execução e no relatório (seção de dados utilizados) com sua cardinalidade e taxa de órfãos.
+
+**Relacionamentos:** RF-007, RF-024, RN-003; CA-028, CA-029.
+
+### RN-019 — Origem de todo número é rastreável
+
+Todo resultado deve permitir chegar aos arquivos, abas, colunas, junções e tratamentos que o produziram. Divergências entre fontes para a mesma medida são reportadas, não escondidas por escolha silenciosa de uma das fontes.
+
+**Relacionamentos:** RF-018, RF-025; CA-030.
 
 ## 8. Fluxos de uso
 
@@ -462,7 +519,7 @@ O projeto pretende utilizar múltiplos agentes especializados. O pacote `dataai-
 | `validate-analysis` | Auditar números, relações, contratos e consistência. | `technical-reviewer` |
 | `orchestrate-quality-review` | Revisar entregas finais, direcionar correções e decidir liberação. | `quality-orchestrator` |
 
-Os oito perfis declarativos estão em `agents/*.yaml`. Eles não criam agentes executáveis automaticamente. A execução dos agentes será feita pela própria aplicação, sem CrewAI (ver 12.5).
+Os oito perfis declarativos estão em `agents/*.yaml` deste repositório (revisão 1.3). Eles são lidos pelo código da aplicação (seção 12.9); sozinhos, não criam agentes executáveis. A execução dos agentes será feita pela própria aplicação, sem CrewAI (ver 12.5).
 
 **Ingestão de CSV e Excel (confirmado na revisão 1.2):** a skill `ingest-csv` do pacote `3.0.0` passa a se chamar `ingest-tabular` e é responsável pela leitura de CSV e Excel. Uma única skill de ingestão cobre os dois formatos; não haverá skill separada para Excel. O pacote de skills e os contratos que citam `ingest-csv` devem ser atualizados para o novo nome. O suporte Excel do MVP está em 16.3 (P-001).
 
@@ -496,6 +553,8 @@ O pacote configura `max_review_cycles: 3` no perfil `quality-orchestrator` e usa
 
 As skills documentam as convenções abaixo. Mantê-las como referência técnica, sem confundi-las com todas as decisões de negócio já aprovadas:
 
+**Revisão 1.3:** a lista deste parágrafo foi ampliada e substituída, como referência de cálculo, pelo catálogo da seção 12.7; as relações entre arquivos seguem a seção 12.8. A tabela de convenções abaixo continua válida.
+
 A capacidade descritiva documentada inclui contagens, frequências absolutas e relativas, média, mediana, mínimo, máximo, quartis, intervalo interquartil, desvio-padrão, agrupamentos e séries temporais. A exploração geral também foi descrita como capaz de investigar concentrações, diferenças entre grupos, extremos, ausências, inconsistências e associações descritivas compatíveis com as variáveis. Não foi aprovada uma lista fixa que deva ser executada integralmente para todo arquivo.
 
 | Tema | Convenção existente |
@@ -523,7 +582,7 @@ A convenção estatística do pacote deve ser ratificada ou substituída explici
 | Skills temáticas e arquivos `SKILL.md` | Confirmados; catálogo existente listado acima. |
 | CrewAI | **Descartado (revisão 1.2).** Não será utilizado. |
 | n8n | **Descartado (revisão 1.2).** Não será utilizado. |
-| GitHub | Considerado para organizar/versionar skills. Não foi indicado repositório definitivo. |
+| GitHub | Repositório `ribeiropvb/DataAI` com especificação, skills, perfis de agentes e código de referência (revisão 1.3). |
 | Python `3.13.7` | Versão informada pelo usuário no ambiente local. Não é, por si só, decisão de runtime de produção nem comprovação de compatibilidade de todas as dependências. |
 | VS Code | Ambiente de desenvolvimento que o usuário deseja utilizar desde o início. |
 | Pasta local | `E:\UFG\Especializacao\01 - Projetos\01- DataAI`. Não é caminho do servidor de produção. |
@@ -541,6 +600,167 @@ Nos produtores de arquivos, o pacote diferencia um intermediário de uma entrega
 Não foram acordadas APIs externas de dados, autenticação, e-mail, mensagens, pagamentos, agendamento ou publicação. O pedido de colocar o serviço em produção existe, mas fornecedor e condições de operação continuam pendentes.
 
 O orquestrador deve encaminhar correções dentro do processamento da análise. Isso não estabelece integração com um gerenciador externo de tarefas.
+
+### 12.7. Catálogo de métricas (revisão 1.3)
+
+**Situação:** a abrangência é confirmada (RF-022, RN-016). As famílias, fórmulas, limiares e convenções abaixo são **[proposta MVP]** e substituem a lista curta da seção 12.4 como referência de cálculo (P-016). Cada métrica é implementada em `dataai/tools/metrics.py`; o nome da função aparece na última coluna.
+
+#### 12.7.1. Como as métricas são escolhidas
+
+1. **Qualidade (M1) sempre entra.** Ela informa quanto se pode confiar em cada número e alimenta o resumo da execução.
+2. **Aplicabilidade pelos tipos semânticos.** Cada família exige certos tipos de coluna (tabela 12.7.3). Uma família só é planejada quando os dados a suportam.
+3. **Análise direcionada:** entram as famílias que respondem à pergunta, mais M1 e a sensibilidade (M15) da métrica principal.
+4. **Exploração geral:** entram as famílias aplicáveis com maior chance de achado relevante, de 5 a 12 análises, cobrindo pelo menos três perguntas de decisão (12.7.2).
+5. **Nada de catálogo inteiro por padrão.** Uma métrica que não se liga ao objetivo não é calculada só porque é possível.
+
+#### 12.7.2. Perguntas de decisão que o conjunto deve cobrir
+
+| Pergunta de decisão | Famílias que respondem |
+|---|---|
+| Posso confiar nestes dados? | M1, M15, M14 |
+| Quanto e quão típico? | M2, M3, M4 |
+| Onde está o volume ou o problema? | M5, M6 |
+| Para onde está indo? | M7 |
+| Em relação a quê (meta, período anterior, média, outro grupo)? | M8, M9 |
+| O que explica a variação? | M10 |
+| Quem são as entidades e como se comportam? | M11 |
+| Os prazos estão sendo cumpridos? | M12 |
+| O que varia junto? | M13 |
+| As fontes concordam entre si? | M14 |
+
+Na exploração geral e no relatório, cada achado principal responde a pelo menos uma dessas perguntas e traz: magnitude (valor absoluto e relativo), comparação com uma referência, indicação de confiabilidade (n, ausências, sensibilidade) e, quando couber, ponto a investigar. Isso é o que torna a métrica útil para decidir, sem atribuir causa.
+
+#### 12.7.3. Famílias
+
+**M1 — Qualidade e confiabilidade** (sempre)
+
+| Métrica | Definição | Função |
+|---|---|---|
+| Completude | % de valores não ausentes por coluna, por linha e no dataset; completude dos campos usados em cada métrica. | `quality_completeness` |
+| Unicidade | % de linhas totalmente duplicadas; % de duplicidade em cada chave candidata. | `quality_uniqueness` |
+| Validade | % de valores que respeitam o tipo e a faixa plausível (datas convertíveis, números, negativos inesperados, datas futuras). | `quality_validity` |
+| Consistência | Variantes de grafia da mesma categoria (`SP`, `sp`, ` S.P.`); regras entre colunas detectáveis (fim ≥ início, total = soma das partes). | `quality_consistency` |
+| Cobertura temporal | Data mínima e máxima, períodos sem registro, períodos parciais nas pontas. | `quality_temporal_coverage` |
+| Integridade referencial | % de órfãos em cada ligação usada (12.8). | `relations.referential_integrity` |
+| Base efetiva | Para cada resultado: n usado, n excluído por ausência ou filtro. | registrado em todo resultado |
+
+**M2 — Volume e contagem:** linhas, distintos por coluna, contagem por entidade, densidade (eventos por entidade, por período). Função `volume_counts`.
+
+**M3 — Posição:** média, mediana, moda, média aparada a 5% em cada ponta, média ponderada (quando há coluna de peso declarada), mínimo, máximo e percentis P1, P5, P10, P25, P50, P75, P90, P95, P99. Função `position_stats`.
+
+**M4 — Dispersão e forma:** desvio-padrão e variância amostrais (`ddof=1`), amplitude, IQR, desvio absoluto mediano (MAD), coeficiente de variação (só para medidas de razão estritamente positivas), assimetria e curtose em excesso (estimadores corrigidos), histograma com regra de Freedman–Diaconis e extremos por cercas do IQR (1,5·IQR) e por z robusto (|0,6745·(x − mediana)/MAD| > 3,5). Extremos são sinalizados, nunca removidos. Função `dispersion_shape`.
+
+**M5 — Frequência e composição:** frequência absoluta, relativa e acumulada; moda categórica; número de categorias; diversidade pela entropia de Shannon normalizada (0 = tudo em uma categoria, 1 = distribuição uniforme); participação de cada categoria no total de uma medida; tabela cruzada com percentuais por linha, por coluna e do total. Funções `frequency_table`, `share_of_total`, `crosstab`.
+
+**M6 — Concentração e Pareto:** participação dos maiores (top 1, top 5, top 10 e top 20% dos itens); curva de Pareto e classes ABC (A até 80% acumulado, B até 95%, C o restante); número de itens que somam 80%; índice de Gini (0 = igualdade, 1 = concentração total); índice Herfindahl-Hirschman (HHI, soma dos quadrados das participações em %, de 0 a 10.000). Funções `concentration`, `pareto_abc`. Exige medida não negativa.
+
+**M7 — Tempo e tendência:** série na granularidade declarada (dia, semana, mês, trimestre, ano); variação absoluta e percentual período a período; comparação com o mesmo período do ano anterior quando há pelo menos 13 meses; acumulado no ano; média móvel com janela declarada; taxa composta de crescimento (CAGR) quando há pelo menos dois anos completos e valores positivos; inclinação da tendência linear por período (mínimos quadrados, descritiva, sem p-valor) e variação total entre o primeiro e o último período completo; perfil sazonal descritivo (média por mês do ano, dia da semana ou hora); volatilidade (desvio-padrão das variações percentuais); pico e vale; períodos parciais e lacunas. Funções `time_series`, `period_change`, `trend_summary`, `seasonal_profile`.
+
+**M8 — Comparação entre grupos e com referências:** diferença absoluta e relativa entre grupos; razão; índice relativo à média geral (100 = média); ranking com tratamento de empates; comparação contra referência — atingimento (realizado ÷ meta) e lacuna (realizado − meta), quando a referência existe nos dados ou foi informada pelo usuário (P-019); sinal de grupo pequeno (n < 30). Funções `group_comparison`, `compare_to_reference`.
+
+**M9 — Taxas, proporções e funis:** toda taxa guarda numerador e denominador; distinção explícita entre taxa agregada (Σnumerador ÷ Σdenominador) e média das taxas dos grupos; funil de etapas sequenciais com conversão por etapa e acumulada; verificação de paradoxo de Simpson (a direção da diferença entre dois grupos no total se inverte dentro dos estratos), que gera aviso obrigatório. Funções `rate`, `funnel`, `simpson_check`.
+
+**M10 — Decomposição e fatores da variação:** contribuição de cada grupo para a variação do total entre dois períodos (Δgrupo ÷ Δtotal, somando 100%); decomposição exata da variação de uma média ou taxa em efeito composição (mudança no peso dos grupos) e efeito desempenho (mudança dentro dos grupos), pelo método de shift-share com pesos médios; ponte (waterfall) do valor inicial ao final. É a família que responde "o que explica a mudança" sem afirmar causa. Funções `contribution_to_change`, `mix_rate_decomposition`.
+
+**M11 — Entidades, coortes e comportamento** (exige identificador de entidade e data de evento): recência (dias entre o último evento da entidade e a data de referência, que é a maior data dos dados, salvo outra declarada), frequência (eventos por entidade), valor (soma de uma medida por entidade); segmentação por quintis de recência, frequência e valor; coortes pelo período da primeira ocorrência e retenção nos períodos seguintes (% da coorte ativa); entidades novas e recorrentes por período; inatividade descritiva (sem evento há mais que um limite declarado); intervalo mediano entre eventos. Funções `entity_rfm`, `cohort_retention`, `new_vs_returning`.
+
+**M12 — Durações e prazos** (exige duas datas, ou uma data e um prazo): duração (fim − início) com estatísticas de M3 e M4; % concluído dentro do prazo ou limite declarado; atraso médio e mediano entre os atrasados; itens em aberto em uma data de referência (backlog). Funções `durations`, `deadline_compliance`.
+
+**M13 — Associação descritiva:** Pearson (medida × medida, relação linear), Spearman (monotônica, também para ordinais), V de Cramér com correção de viés (categoria × categoria) e razão de correlação eta (categoria × medida). Sempre com n e sem p-valor. Linguagem: |coeficiente| < 0,3 fraca, de 0,3 a 0,5 moderada, ≥ 0,5 forte. Associação nunca é apresentada como causa. Função `association`.
+
+**M14 — Reconciliação entre fontes** (exige duas fontes com entidade ou medida em comum, 12.8): cobertura cruzada (% das entidades de A presentes em B e vice-versa); sobreposição dos períodos cobertos; reconciliação de medida equivalente no nível comum (total em A, total em B, diferença absoluta e %); divergência de atributos (mesma chave com valor diferente, em %); participação de cada partição ou fonte em um conjunto empilhado. Funções `source_coverage`, `reconcile_measure`, `attribute_divergence`.
+
+**M15 — Sensibilidade e robustez:** recálculo da métrica principal sem os extremos (cercas do IQR) e variação resultante; distância entre média e mediana; resultado com e sem linhas órfãs ou com ausências; estabilidade do ranking dos grupos (quantos mudam de posição). Se a sensibilidade passar de 10%, o resultado recebe `sensitive: true` e o relatório deve dizer isso. Função `sensitivity`.
+
+#### 12.7.4. Aplicabilidade
+
+| Família | Exige |
+|---|---|
+| M1, M2 | qualquer dataset |
+| M3, M4, M15 | uma `measure` |
+| M5 | uma `category` (e, para participação, uma `measure`) |
+| M6 | `category` ou `identifier` + `measure` não negativa |
+| M7 | `datetime` + `measure` ou contagem, com pelo menos 3 períodos |
+| M8 | `category` + `measure`/taxa; para referência, coluna ou valor de meta (P-019) |
+| M9 | numerador e denominador definidos; funil exige etapas ordenadas |
+| M10 | `datetime` (dois períodos) + `category` + `measure` |
+| M11 | `identifier` de entidade + `datetime` de evento (+ `measure` para valor) |
+| M12 | duas `datetime` ou `datetime` + prazo |
+| M13 | duas colunas compatíveis com n ≥ 10 |
+| M14 | duas fontes com entidade ou medida comum |
+
+#### 12.7.5. Convenções comuns
+
+- Desvio-padrão `ddof=1`; quantis pelo método linear; precisão total interna e arredondamento só na apresentação; percentuais guardados como fração.
+- Ausentes são excluídos de cada métrica e a exclusão é contada; zero nunca é ausente.
+- Divisão por zero gera ausente com aviso, nunca zero.
+- Grupos com n < 30 recebem `small_sample: true`; períodos incompletos recebem `partial_period: true`.
+- Totais de controle: a soma dos grupos confere com o total quando a métrica é aditiva.
+- Todo resultado registra `metric_id`, família, fórmula, população, filtros, unidade, n, excluídos, parâmetros, avisos, linhagem (datasets, arquivos, abas e colunas) e o código que o calculou.
+- Fora do MVP continuam testes de hipótese, p-valores, intervalos de confiança inferenciais, previsão e inferência causal (P-014). Tendência, sazonalidade e decomposição acima são descritivas.
+
+### 12.8. Múltiplos arquivos, origens e descoberta de ligações (revisão 1.3)
+
+**Situação:** o comportamento é confirmado (RF-023 a RF-025, RN-017 a RN-019). Limiares e pesos são **[proposta MVP]** (P-003). Implementação em `dataai/tools/relations.py`.
+
+#### 12.8.1. Inventário
+
+Cada CSV é uma tabela; cada aba `.xlsx` com dados é uma tabela (P-001). Toda tabela guarda arquivo, aba, hash do arquivo e, opcionalmente, a **origem** informada pelo usuário (sistema, setor ou fonte). Sem essa informação, a origem é o nome do arquivo.
+
+#### 12.8.2. Partições: uma tabela em vários arquivos
+
+1. Compare os esquemas normalizados (nomes sem acento, minúsculos, sem espaços nas pontas) de todos os pares de tabelas.
+2. **Esquema idêntico** (mesmos nomes e tipos compatíveis): grupo de partições. Empilhamento automático, registrado como ajuste de leitura, com as colunas `_source_file` e `_source_sheet` em cada linha.
+3. **Esquema quase idêntico** (similaridade de Jaccard dos nomes ≥ 0,8): proposta de mapeamento de colunas enviada como pergunta. Não empilhar sem resposta.
+4. Depois de empilhar: confira que o total de linhas é a soma das partições; procure chaves repetidas entre partições (mesmo registro em dois arquivos) e períodos sobrepostos. Repetição entre partições é aviso e, se afetar a resposta, pergunta.
+5. Identifique o discriminador da partição quando possível (token do nome do arquivo, como mês ou filial, ou coluna cujos valores não se sobrepõem entre arquivos) e registre.
+
+#### 12.8.3. Descoberta de ligações entre tabelas
+
+1. **Chaves candidatas** por tabela: colunas e combinações de até 3 colunas, sem ausentes e com valores únicos.
+2. **Pares candidatos:** para cada coluna de uma tabela e cada chave candidata de outra, com tipos compatíveis depois de normalizar formato (texto aparado, zeros à esquerda alinhados, número inteiro como texto). Ficam fora colunas `measure` contínuas, datas e booleanos. Colunas com menos de 10 valores distintos, colunas inteiras classificadas como `measure` e alvos que são sequências 1..N só entram se a semelhança dos nomes for pelo menos 0,5, para evitar coincidências entre números pequenos. Nomes genéricos (como `id`) são comparados pelo nome da tabela.
+3. **Evidência medida:**
+   - contenção = |distintos de A ∩ distintos de B| ÷ |distintos de A|;
+   - unicidade do lado referenciado;
+   - semelhança dos nomes (indício, nunca suficiente sozinha, RN-018);
+   - compatibilidade de formato.
+4. **Pontuação** = 0,50·contenção + 0,25·unicidade do alvo + 0,15·semelhança do nome + 0,10·formato. **Forte:** pontuação ≥ 0,7 e contenção ≥ 0,9. **Provável:** pontuação ≥ 0,5 e contenção ≥ 0,5; só é usada depois de confirmada. Abaixo disso, descartada.
+5. **Cardinalidade observada** pelo máximo de repetições da chave em cada lado: 1:1, 1:N, N:1 ou N:N.
+6. **Integridade referencial:** órfãos no lado filho (contagem, %, exemplos), registros do pai sem filhos, chaves nulas.
+7. **Papel de cada tabela:** fato, dimensão, ponte, agregada, referência ou isolada, a partir de medidas, chaves e grão.
+8. **Grafo de ligações:** tabelas são nós; ligações fortes são arestas. Caminhos de junção são escolhidos pelo menor caminho com ligações fortes. Tabelas ponte permitem N:N controlado.
+9. **Armadilhas detectadas antes de juntar:**
+   - *fan-out*: duas relações 1:N saindo da mesma tabela pai juntadas na mesma consulta multiplicam medidas;
+   - grão diferente: juntar fato diário a metas mensais exige agregar ao grão comum antes;
+   - caminhos alternativos: dois caminhos diferentes entre as mesmas tabelas são ambiguidade e geram pergunta.
+10. **Saída:** `results/relationship_map.json` com tabelas, papéis, partições, ligações, evidências e armadilhas, e um diagrama simples no apêndice do relatório.
+
+#### 12.8.4. Uso das ligações
+
+Descobrir não é usar. `plan-analysis` escolhe quais ligações a análise exige; `relate-datasets` executa a junção com verificação antes e depois (linhas, totais de controle, órfãos) e regras de agregação para medidas da tabela pai. Medidas de tabelas de grão mais fino são agregadas ao grão da análise antes de juntar.
+
+#### 12.8.5. Origens diferentes
+
+- **Harmonização registrada:** formatos de data, separador decimal, caixa e espaços de códigos, nomes de colunas equivalentes. Conversões de unidade ou moeda só com regra explícita (dado ou usuário); nunca presumidas.
+- **Códigos diferentes para a mesma coisa** entre fontes (por exemplo, `SP` e `35`) exigem tabela de correspondência existente nos dados ou informada; sem ela, a ligação não é feita.
+- **Mesma medida em duas fontes:** reconciliar (M14) e reportar divergência. Escolher uma fonte como oficial exige decisão do usuário (P-020).
+- **Linhagem:** todo dataset derivado lista seus pais e tratamentos; todo resultado lista datasets, arquivos, abas e colunas de origem (RN-019).
+
+### 12.9. Implementação de referência (revisão 1.3)
+
+**Situação:** estrutura criada no repositório na revisão 1.3 para tornar as skills executáveis. Não é arquitetura de produção (P-017).
+
+| Parte | Local | Papel |
+|---|---|---|
+| Ferramentas determinísticas | `dataai/tools/` | Leitura, perfil, descoberta de ligações, métricas, gráficos, dashboard HTML, relatório PDF, inspeção de entregas e validação. Todo número sai daqui. |
+| Pasta e manifesto da análise | `dataai/workspace.py` | Pasta por análise, hashes, versões e manifesto (P-009). |
+| Perfis de agentes | `agents/*.yaml` | Oito perfis: papel, skills, ferramentas permitidas, saída esperada e limites. |
+| Execução de agentes | `dataai/agents/` | Monta as instruções do agente (perfil + `SKILL.md`), expõe as ferramentas por chamada de função e executa o ciclo até a resposta final. |
+| Provedor de IA | `dataai/llm/` | Interface única, independente de provedor, com adaptadores opcionais. O provedor e o modelo são configuração (P-017). |
+| Orquestração | `dataai/orchestrator.py` | Encadeia as etapas, aplica os ciclos de revisão (P-012) e escreve o resumo da execução (RN-015). |
+| Modo sem IA | `--no-llm` | Executa o fluxo com planejamento heurístico e texto em modelo fixo, para testar ferramentas e entregas antes de escolher o provedor. Não substitui os agentes. |
+
+O LLM decide (planejar, escolher gráficos, redigir, revisar) e as ferramentas calculam. O texto do relatório referencia resultados por marcadores (`{{res_id.campo}}`) que o código substitui pelos valores calculados, de modo que nenhum número do PDF é digitado pelo modelo.
 
 ## 13. Requisitos não funcionais
 
@@ -682,6 +902,30 @@ Os critérios desta seção não resolvem pendências de extensão, limites ou p
 
 **Dado** o pacote de competências do projeto, **quando** suas instruções forem utilizadas por outro desenvolvedor ou IA, **então** cada skill deve possuir `SKILL.md` identificável, responsabilidade definida e referências necessárias para executar sua tarefa, sem depender de reconstruir nomes ou conceitos a partir da conversa. Relaciona-se a RF-020 e RNF-005.
 
+### CA-026 — Métricas além de posição e dispersão
+
+**Dado** um conjunto com ao menos uma medida, uma categoria e uma data, **quando** for pedida exploração geral, **então** o plano e os resultados devem incluir indicadores de qualidade (M1) e pelo menos uma métrica de composição ou concentração (M5/M6), uma de evolução no tempo (M7) e uma comparação com referência (M8), cada uma com fórmula, população, n e origem. Relaciona-se a RF-022 e RN-016.
+
+### CA-027 — Tabela dividida em vários arquivos
+
+**Dado** três CSVs com o mesmo esquema, um por mês, **quando** forem enviados juntos, **então** a aplicação deve reconhecê-los como partições, empilhá-los com a coluna de origem, conferir que o total de linhas é a soma das partes e analisar o conjunto como uma tabela. Relaciona-se a RF-023 e RN-017.
+
+### CA-028 — Descoberta de ligações sem informação do usuário
+
+**Dado** arquivos com uma chave comum não informada pelo usuário (inclusive com nomes de coluna diferentes), **quando** forem ingeridos, **então** o mapa de ligações deve apresentar a relação com contenção, cardinalidade observada e percentual de órfãos. Relaciona-se a RF-024 e RN-018.
+
+### CA-029 — Arquivos independentes não são ligados
+
+**Dado** dois arquivos sem valores de chave em comum, **quando** forem analisados juntos, **então** nenhuma ligação forte deve ser criada e nenhum resultado deve depender de junção entre eles. Relaciona-se a RN-003 e RN-018.
+
+### CA-030 — Origem e divergência entre fontes
+
+**Dado** dois arquivos de origens diferentes que trazem a mesma medida para as mesmas entidades, **quando** a análise usar essa medida, **então** cada resultado deve citar arquivo, aba e coluna de origem, e a divergência entre as fontes deve ser medida e reportada no resumo da execução. Relaciona-se a RF-025 e RN-019.
+
+### CA-031 — Achados orientados à decisão
+
+**Dado** um relatório PDF gerado, **quando** for revisado, **então** cada achado principal deve trazer magnitude, comparação com uma referência e indicação de confiabilidade (n, ausências ou sensibilidade). Relaciona-se a RF-022 e RN-016.
+
 ### 15.1. Cenários técnicos existentes que ainda exigem ratificação
 
 O pacote prevê verificações de linhas malformadas, cabeçalhos repetidos, chaves nulas, expansão de joins, base inteiramente ausente, divisão por zero, formatos ambíguos, falta de ferramenta de renderização e ausência de inspeção. Esses casos devem ser usados na decisão sobre P-003 a P-005, P-012, P-013 e P-016.
@@ -694,7 +938,7 @@ Não foi criado um critério de aceite obrigatório que aprove automaticamente e
 |---|---|---|---|
 | P-001 | Quais extensões e estruturas Excel serão aceitas? Como lidar com abas, tabelas múltiplas, fórmulas, subtotais, células mescladas, arquivos protegidos e macros? | Excel foi confirmado; a ingestão passa a ser `ingest-tabular`. Proposta para o MVP em 16.3. | Bloqueia contrato e aceite completos de RF-002. |
 | P-002 | Quantidade/tamanho máximos de arquivos e suporte a convenções CSV. | Um ou mais arquivos; limites e convenções não definidos. | Bloqueia validação de entrada e dimensionamento. |
-| P-003 | Quais relações serão suportadas no MVP? Como tratar chaves ambíguas e relações de muitos para muitos? | Múltiplos arquivos relacionados estão confirmados; skills já verificam cardinalidade. | Bloqueia definição completa dos casos relacionais aceitos. |
+| P-003 | Quais relações serão suportadas no MVP? Como tratar chaves ambíguas, relações de muitos para muitos e partições com esquema parecido? | Múltiplos arquivos relacionados, partições e descoberta de ligações confirmados (RF-023, RF-024). Regras e limiares propostos em 12.8. | Bloqueia definição completa dos casos relacionais aceitos. |
 | P-004 | Qual autonomia para corrigir leitura, excluir registros, imputar ausências, resolver duplicidades e preservar originais? | Divisão entre ajustes automáticos e tratamentos sujeitos a aprovação foi proposta e não respondida. | Impede implementar tratamento automático como se já estivesse autorizado. |
 | P-005 | Quando pedir esclarecimento? Há aprovação de plano? O que fazer com contexto insuficiente? | Dois modos confirmados; perguntas somente para ambiguidades materiais são proposta. | Afeta fluxo, pausas e experiência do usuário. |
 | P-006 | Como serão identidade, acesso, propriedade de análises e isolamento entre usuários? | Públicos definidos, permissões não definidas. | Bloqueia arquitetura completa de acesso em produção. |
@@ -707,9 +951,11 @@ Não foi criado um critério de aceite obrigatório que aprove automaticamente e
 | P-013 | Como tratar arquivo inválido, falha parcial, falta de ferramenta e parte do pedido inviável? | Skills têm estados internos; política de lote/entrega parcial não foi aprovada. | Bloqueia comportamento completo de falhas e exceções da aplicação. |
 | P-014 | Quais capacidades adicionais ficam explicitamente fora do MVP? | Escopo confirmado é descritivo; lista de exclusões do documento inicial era proposta. | Evita prometer inferência, previsão ou integrações sem definição. |
 | P-015 | Quais controles serão oferecidos ao perfil de analista e em qual versão? | Intenção de atender ambos os perfis confirmada; primeiro público é o não programador. | Afeta evolução, sem obrigar modo avançado imediato. |
-| P-016 | Quais padrões de métricas, quantis, desvio-padrão e seleção/priorização de achados serão fixos? Como registrar evidências? | Há convenções no pacote, sem ratificação individual como política do serviço. | Bloqueia contrato analítico definitivo e parte da validação automática. |
+| P-016 | Quais padrões de métricas, quantis, desvio-padrão e seleção/priorização de achados serão fixos? Como registrar evidências? | Abrangência confirmada (RF-022); catálogo, limiares e convenções propostos em 12.7. | Bloqueia contrato analítico definitivo e parte da validação automática. |
 | P-017 | Qual arquitetura de execução e produção: provedor de IA, fila, hospedagem, custos, tempo e cancelamento? | CrewAI e n8n descartados; agentes LLM com código próprio confirmados. Proposta para o MVP em 16.3. | Bloqueia implantação e operação com limites definidos. |
 | P-018 | Qual desenho de telas e distribuição de validações entre interface, serviço e banco? | Interações principais definidas; sem telas, rotas ou responsabilidades técnicas aprovadas. | Bloqueia detalhamento final da interface e das validações por camada. |
+| P-019 | De onde vêm metas e referências para as métricas de comparação (M8)? | Proposta MVP: usar colunas de meta existentes nos dados ou valores informados pelo usuário no pedido; sem isso, comparar com período anterior, média geral ou outros grupos. Nunca inventar meta. | Sem meta, atingimento e lacuna não são calculados. |
+| P-020 | Quando duas fontes divergem sobre a mesma medida ou atributo, qual prevalece? | Proposta MVP: nenhuma prevalece automaticamente; a divergência é medida (M14) e reportada; se afetar materialmente a resposta, o usuário escolhe a fonte. | Afeta resultados que dependem de fontes sobrepostas. |
 
 ### 16.1. Correções e substituições resolvidas
 
@@ -725,6 +971,8 @@ Não foi criado um critério de aceite obrigatório que aprove automaticamente e
 | CrewAI e n8n considerados para orquestração | Descartados; agentes LLM com código próprio (revisão 1.2, seção 12.5). |
 | Ingestão restrita a `ingest-csv` | Renomeada para `ingest-tabular`, cobrindo CSV e Excel (revisão 1.2, seção 12.1). |
 | Canal de limitações indefinido quando só há dashboard | Resumo da execução (revisão 1.2, RN-015). |
+| Capacidade descritiva centrada em posição e dispersão | Catálogo abrangente e orientado à decisão (revisão 1.3, RF-022, RN-016, seção 12.7). |
+| Cada arquivo tratado implicitamente como uma tabela | Partições empilhadas e ligações descobertas entre arquivos (revisão 1.3, RF-023, RF-024, RN-017, seção 12.8). |
 | Caminho local `E:\UFG\Especializacao\Projetos\DataAI` | Caminho correto: `E:\UFG\Especializacao\01 - Projetos\01- DataAI`. |
 
 ### 16.2. Tensões ainda não resolvidas
@@ -735,7 +983,7 @@ Não foi criado um critério de aceite obrigatório que aprove automaticamente e
 4. **Conservar histórico versus duração e acesso:** a conservação está aprovada, mas acesso, exclusão, prazo e armazenamento não foram definidos. P-006 a P-009.
 5. ~~**Insights versus pedido somente de HTML.**~~ Resolvida: o resumo da execução (RN-015) é o canal das limitações; interpretações continuam fora do dashboard.
 
-### 16.3. Triagem das pendências para o MVP (revisão 1.2)
+### 16.3. Triagem das pendências para o MVP (revisão 1.2, P-003 e P-016 atualizadas na 1.3)
 
 O MVP é uma versão inicial, executada localmente por um único usuário, cujo objetivo é demonstrar o fluxo completo: entrada, análise descritiva, PDF/HTML, revisão de qualidade e histórico. Com esse recorte, as pendências se dividem em três grupos. As decisões abaixo são a **proposta para o MVP**, com a qual o usuário concordou em linhas gerais; cada item pode ser ajustado antes da implementação da parte afetada.
 
@@ -745,12 +993,12 @@ O MVP é uma versão inicial, executada localmente por um único usuário, cujo 
 |---|---|
 | P-001 | Aceitar somente `.xlsx`. Cada aba é tratada como um dataset, com cabeçalho na primeira linha e uma tabela por aba. Fórmulas são lidas pelo valor calculado. Várias tabelas na mesma aba, células mescladas no cabeçalho, linhas de subtotal, arquivos protegidos por senha, `.xls` e `.xlsm` ficam fora: a ingestão informa o bloqueio e não tenta adivinhar a estrutura. |
 | P-002 | Até 10 arquivos por análise e até 50 MB somados. CSV com detecção de encoding (UTF-8 e Latin-1) e de delimitador (vírgula, ponto e vírgula e tabulação). Valores fora disso são informados ao usuário. |
-| P-003 | Suportar relações um para um e um para muitos com chaves verificadas (correspondência e cardinalidade). Chaves ambíguas e relações de muitos para muitos geram pedido de esclarecimento; não são combinadas automaticamente. |
+| P-003 | Suportar relações um para um, um para muitos e muitos para um, com chave simples ou composta (até 3 colunas), descobertas e verificadas pelos critérios de 12.8 (contenção, cardinalidade, integridade). Muitos para muitos só por tabela ponte detectada. Muitos para muitos direto, chaves ambíguas, caminhos alternativos e ligações apenas "prováveis" geram pedido de esclarecimento. Partições com esquema idêntico são empilhadas automaticamente; com esquema parecido, geram pergunta com o mapeamento proposto. |
 | P-004 | Ajustes de leitura verificáveis (encoding, delimitador, tipos, datas, separador decimal) são feitos automaticamente e registrados. Excluir registros, imputar ausências ou resolver duplicidades ambíguas exige autorização do usuário. Os arquivos originais são preservados sem alteração; os tratamentos operam sobre cópias de trabalho. |
 | P-005 | Perguntar ao usuário somente quando a ambiguidade puder alterar materialmente a resposta. Não há aprovação obrigatória do plano. Com contexto insuficiente para uma ambiguidade não material, a análise segue com a suposição registrada no resumo da execução (RN-015). |
 | P-012 | Até 3 ciclos de revisão. Problemas são classificados como **defeito** (impede a aprovação) ou **sugestão** (opcional). Se um defeito persistir após o terceiro ciclo, a entrega é disponibilizada marcada como "não aprovada", com a lista de defeitos no resumo da execução. Nunca é apresentada como aprovada. |
 | P-013 | Arquivo inválido ou não suportado: informar e prosseguir com os demais somente se o pedido não depender dele; caso contrário, bloquear a análise. Se só parte do pedido for viável, entregar a parte viável identificada como parcial. Falta de ferramenta de geração ou renderização bloqueia a entrega afetada. |
-| P-016 | Adotar as convenções do pacote como padrão do MVP: desvio-padrão com `ddof=1`, quantis pelo método linear, precisão interna completa e arredondamento só na apresentação. A seleção dos achados prioriza os que respondem ao objetivo e, na exploração geral, os de maior magnitude ou relevância. Todo número cita a origem do cálculo. |
+| P-016 | Adotar o catálogo da seção 12.7 (15 famílias, de qualidade a sensibilidade) e as convenções do pacote: desvio-padrão com `ddof=1`, quantis pelo método linear, precisão interna completa e arredondamento só na apresentação. A seleção dos achados prioriza os que respondem ao objetivo e, na exploração geral, os que cobrem mais perguntas de decisão (12.7.2) com maior magnitude. Todo número cita a origem do cálculo. |
 | P-017 | Execução local em Python, com agentes LLM coordenados pelo código da aplicação (sem CrewAI e sem n8n). Sem fila nem hospedagem no MVP: uma análise por vez. **Falta escolher o provedor e o modelo de IA.** Registrar o custo de tokens por análise para servir de base a limites futuros. |
 
 **B. Versão simplificada no MVP**
@@ -794,6 +1042,7 @@ O uso de `.rar` nessa conversa foi um meio de fornecer a base de teste, não dec
 - Estados de skills foram separados dos estados ainda indefinidos da aplicação.
 - Os critérios de aceite estão vinculados à base confirmada e explicitam dependências de decisões pendentes.
 - CrewAI e n8n foram descartados (revisão 1.2). Não foi presumida escolha definitiva de banco, provedor de IA ou hospedagem.
+- Revisão 1.3: a abrangência das métricas, as partições, a descoberta de ligações e as origens diferentes foram confirmadas pelo usuário (RF-022 a RF-025, RN-016 a RN-019); catálogo, limiares e pesos ficaram marcados como proposta MVP (P-003, P-016, P-019, P-020).
 - As lacunas que impedem partes da implementação estão localizadas na seção 16. Este documento não declara prontas as partes que dependem dessas decisões.
 
 ## 19. Histórico deste documento
@@ -803,3 +1052,4 @@ O uso de `.rar` nessa conversa foi um meio de fornecer a base de teste, não dec
 | 1.0 | 24/10/2026 | Consolidação dos requisitos confirmados, referências existentes, propostas e pendências da conversa. |
 | 1.1 | 24/10/2026 | Atualização da referência ao `DatAI_Definicao_MVP.pdf` para a versão 0.2 e esclarecimento do papel de cada artefato. Nenhum requisito de negócio ou decisão pendente foi alterado. |
 | 1.2 | 31/10/2026 | CrewAI e n8n descartados em favor de agentes LLM com código próprio; `ingest-csv` renomeada para `ingest-tabular` (CSV e Excel); criada a RN-015 (resumo da execução), resolvendo P-011; corrigido o caminho da pasta local; adicionada a triagem das pendências para o MVP (16.3). |
+| 1.3 | 31/10/2026 | Métricas abrangentes e orientadas à decisão (RF-022, RN-016, catálogo de 15 famílias em 12.7); tabelas em vários arquivos, partições e descoberta de ligações entre arquivos (RF-023, RF-024, RN-017, RN-018, seção 12.8); origens diferentes com linhagem e reconciliação (RF-025, RN-019); implementação de referência no repositório (12.9); critérios CA-026 a CA-031; novas pendências P-019 e P-020; P-003 e P-016 revistas. |

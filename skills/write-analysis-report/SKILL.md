@@ -4,7 +4,7 @@ description: Produz o relatório PDF real de uma análise do DataAI, com objetiv
 metadata:
   project: DataAI
   agent: report-writer
-  spec: specs.md v1.2 (RF-009, RN-004, RN-008, RN-011, CA-008, CA-013, CA-018)
+  spec: specs.md v1.3 (RF-009, RN-004, RN-008, RN-011, CA-008, CA-013, RF-022, RN-016, CA-018, CA-031)
 ---
 
 # write-analysis-report
@@ -22,7 +22,7 @@ Gera o arquivo `report.pdf`. Markdown, HTML ou texto na conversa **não** satisf
 
 1. **Capa:** título da análise, data, arquivos analisados.
 2. **Objetivo:** a pergunta do usuário (modo `directed`) ou o objetivo da exploração (modo `exploratory`), em uma ou duas frases.
-3. **Resposta curta / principais achados:** de 3 a 5 achados, cada um em uma frase com o número que o sustenta. No modo `directed`, o primeiro achado responde diretamente à pergunta.
+3. **Resposta curta / principais achados:** de 3 a 5 achados em blocos `finding`, cada um com magnitude, comparação com uma referência, confiabilidade e, quando couber, o ponto a investigar (CA-031). No modo `directed`, o primeiro achado responde diretamente à pergunta. O conjunto cobre mais de uma pergunta de decisão (RN-016).
 4. **Dados utilizados:** arquivos, período, unidade de observação, volume e relações usadas, em linguagem simples.
 5. **Desenvolvimento:** uma seção por achado, na ordem do raciocínio:
    - o que foi medido (métrica e população);
@@ -52,16 +52,29 @@ Proibido: inventar números, arredondar de forma que mude o sentido, afirmar cau
 
 ## Implementação
 
-- Gere o PDF a partir de HTML com CSS de impressão (por exemplo, WeasyPrint ou Playwright `page.pdf`). Registre a ferramenta.
-- Gráficos renderizados como imagem vetorial (SVG) ou PNG em alta resolução, com as cores de `design-charts`.
-- Números **somente** de `results/*.json`, formatados em pt-BR.
+- Ferramenta `build_report` (`dataai/tools/report.py`, reportlab). Documento:
+  ```json
+  { "title": "...", "subtitle": "...",
+    "sections": [ { "heading": "Principais achados", "blocks": [
+      { "type": "finding", "title": "Receita cresceu no 1º trimestre de 2025",
+        "magnitude": "{{res_receita_var:pct_change|percent_1}} ({{res_receita_var:abs_change|currency_brl}})",
+        "reference": "contra o mesmo trimestre de 2024",
+        "reliability": "n = {{res_receita_var:n|integer}} vendas; sensibilidade baixa",
+        "interpretation": "...", "investigate": "..." },
+      { "type": "chart", "chart_id": "ch_receita_mes" },
+      { "type": "paragraph", "text": "..." } ] } ] }
+  ```
+  Blocos: `paragraph`, `subheading`, `bullets`, `finding`, `chart`, `table`, `tool_note`, `page_break`. Capa, numeração de páginas e apêndice (definições das métricas, tratamentos e mapa de ligações) são automáticos.
+- **Números só por marcador:** `{{result_id:caminho|formato}}`, por exemplo `{{res_receita_loja:rows[group=Online].value|currency_brl}}`. O código substitui pelo valor do resultado e registra cada uso em `number_refs`. Número digitado fora de marcador é defeito na revisão. Limiares de método (20%, 80%, 1,5 × IQR) usam `{{const:20%}}` e só valem se estiverem na lista documentada.
+- `tool_note` só pode repetir um aviso registrado pelas ferramentas (por exemplo, Simpson ou fonte divergente).
+- Gráficos renderizados como PNG em alta resolução, com as cores de `design-charts`.
 - Tamanho A4, margens de 2 cm, corpo 10,5 a 11 pt, numeração de páginas, títulos de seção numerados.
 - Nenhum gráfico ou tabela cortado entre páginas.
 - Salve em `deliverables/v<N>/report.pdf`.
 
 ## Antes de entregar
 
-1. Converta cada página do PDF em imagem e confira legibilidade, cortes e gráficos.
+1. Rode `inspect_report` (com `attach_pages: true` para ver as páginas) e confira legibilidade, cortes, páginas vazias e gráficos.
 2. Confira que cada número citado no texto existe em algum `result_id` (guarde o mapa em `number_refs`).
 
 ## Resultado

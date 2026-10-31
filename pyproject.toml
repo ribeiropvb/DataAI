@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dataai"
+version = "0.1.0"
+description = "Análise de dados com agentes de IA para quem não programa."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "pandas>=2.2",
+  "numpy>=1.26",
+  "openpyxl>=3.1",
+  "pyarrow>=15",
+  "matplotlib>=3.8",
+  "reportlab>=4.0",
+  "pypdf>=4.0",
+  "pypdfium2>=4.0",
+  "pyyaml>=6.0",
+  "playwright>=1.40",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+openai = ["openai>=1.40"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+dataai = "dataai.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["dataai*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

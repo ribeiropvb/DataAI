@@ -4,12 +4,20 @@ description: Examina os datasets já lidos de uma análise do DataAI para identi
 metadata:
   project: DataAI
   agent: data-specialist
-  spec: specs.md v1.2 (RF-003, RF-006, RN-001, RN-014, 12.4, P-004)
+  spec: specs.md v1.3 (RF-003, RF-006, RN-001, RN-014, 12.4, RF-022, RN-016, 12.7.1, 12.7.4, P-004)
 ---
 
 # profile-data
 
 Descobre **o que os dados são** antes que alguém calcule algo com eles. Esta skill observa e registra; ela não exclui, não imputa e não corrige.
+
+## Ferramentas
+
+Executada pelo código: `dataai/tools/profile.py` (`profile(ws)`), que grava `results/profile_<dataset_id>.json`. O agente `data-specialist` revisa com `get_profile`, `preview_rows` e corrige tipos com `set_semantic_type` (com justificativa, registrada como tratamento).
+
+- A qualidade (M1) é calculada pelas mesmas funções do catálogo (`quality_completeness`, `quality_uniqueness`, `quality_validity`, `quality_consistency`, `quality_temporal_coverage`) e fica como resultado reexecutável.
+- Chaves candidatas simples e compostas (até 3 colunas), unidade de observação e valores suspeitos.
+- `applicable_families` diz quais famílias M1–M15 os tipos semânticos permitem (specs 12.7.4). `plan-analysis` só planeja famílias aplicáveis.
 
 ## Entrada
 
