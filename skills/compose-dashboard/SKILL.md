@@ -11,6 +11,10 @@ metadata:
 
 Gera o arquivo `dashboard.html`. Uma especificação, imagem ou PDF **não** substitui o HTML (RF-010).
 
+## Ferramentas
+
+> **Fora do orquestrador do DataAI** (por exemplo, num harness como Claude Code ou Codex), chame cada ferramenta citada nesta skill pelo terminal: `python -m dataai ferramenta <pasta_da_analise> <nome> '<json dos argumentos>'` (ou `@arquivo.json`). A saída é JSON. O passo a passo completo está em `CLAUDE.md`.
+
 ## Entrada
 
 - Especificações de `design-charts` (`charts/*.json`) e `color_map`.

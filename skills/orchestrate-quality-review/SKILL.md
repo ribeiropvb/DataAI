@@ -13,6 +13,8 @@ metadata:
 
 ## Ferramentas
 
+> **Fora do orquestrador do DataAI** (por exemplo, num harness como Claude Code ou Codex), chame cada ferramenta citada nesta skill pelo terminal: `python -m dataai ferramenta <pasta_da_analise> <nome> '<json dos argumentos>'` (ou `@arquivo.json`). A saída é JSON. O passo a passo completo está em `CLAUDE.md`.
+
 Verificações determinísticas que rodam sempre, com ou sem IA (`dataai/review.py`, `deterministic_review`). O agente `quality-orchestrator` acrescenta o julgamento (storytelling, estética), mas **não pode aprovar** o que estas verificações reprovam:
 
 - formato pedido gerado; narrativa e parágrafos no dashboard; tooltips interpretativos;

@@ -13,6 +13,8 @@ Produz todos os números da análise. Gráficos, relatório e dashboard só pode
 
 ## Ferramentas
 
+> **Fora do orquestrador do DataAI** (por exemplo, num harness como Claude Code ou Codex), chame cada ferramenta citada nesta skill pelo terminal: `python -m dataai ferramenta <pasta_da_analise> <nome> '<json dos argumentos>'` (ou `@arquivo.json`). A saída é JSON. O passo a passo completo está em `CLAUDE.md`.
+
 | Ferramenta | Uso |
 |---|---|
 | `list_metric_functions` | Catálogo de funções com família e parâmetros. |
@@ -38,7 +40,7 @@ Código: `dataai/tools/metrics.py` (`compute`, `CATALOG`).
 }
 ```
 
-- `metric_id` vira o `result_id` e é usado nos marcadores do relatório.
+- O `result_id` é o `metric_id` com o prefixo `res_` (acrescentado só se ainda não existir) e é usado nos marcadores do relatório.
 - Funções de reconciliação (M14) recebem também `dataset_id_b`.
 - Operadores de filtro: `== != > >= < <= in not_in is_null not_null contains between` (texto sem diferenciar maiúsculas).
 - A ferramenta recusa colunas inexistentes e agregação numérica de `identifier`. O erro volta para você corrigir a especificação, nunca para trocar a métrica em silêncio.

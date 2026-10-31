@@ -19,6 +19,8 @@ Transforma a intenção do usuário em um plano verificável. Nenhum número é 
 
 ## Ferramentas
 
+> **Fora do orquestrador do DataAI** (por exemplo, num harness como Claude Code ou Codex), chame cada ferramenta citada nesta skill pelo terminal: `python -m dataai ferramenta <pasta_da_analise> <nome> '<json dos argumentos>'` (ou `@arquivo.json`). A saída é JSON. O passo a passo completo está em `CLAUDE.md`.
+
 `list_datasets`, `get_profile` (inclui `applicable_families`), `get_relationship_map`, `preview_rows`, `list_metric_functions`. Você não calcula nada: suas métricas são especificações que `describe-data` executa com `compute_metric`.
 
 ## Procedimento

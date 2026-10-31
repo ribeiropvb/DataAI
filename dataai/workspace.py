@@ -235,7 +235,9 @@ class Workspace:
         p = Path(path)
         rec = {"kind": kind, "artifact_ref": self.rel(p), "version": version,
                "sha256": sha256_file(p), "created_at": now_iso(), **(extra or {})}
-        self.manifest["deliverables"].append(rec)
+        # regerar a mesma entrega na mesma versão substitui o registro (o arquivo foi sobrescrito)
+        self.manifest["deliverables"] = [d for d in self.manifest["deliverables"]
+                                         if not (d["kind"] == kind and d["version"] == version)] + [rec]
         self.save()
         return rec
 

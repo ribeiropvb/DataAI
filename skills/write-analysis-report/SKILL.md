@@ -11,6 +11,10 @@ metadata:
 
 Gera o arquivo `report.pdf`. Markdown, HTML ou texto na conversa **não** satisfazem a entrega (RF-009). A interpretação dos resultados pertence a este relatório.
 
+## Ferramentas
+
+> **Fora do orquestrador do DataAI** (por exemplo, num harness como Claude Code ou Codex), chame cada ferramenta citada nesta skill pelo terminal: `python -m dataai ferramenta <pasta_da_analise> <nome> '<json dos argumentos>'` (ou `@arquivo.json`). A saída é JSON. O passo a passo completo está em `CLAUDE.md`.
+
 ## Entrada
 
 - Plano (`plan-analysis`): pergunta ou modo exploratório, suposições, limitações.

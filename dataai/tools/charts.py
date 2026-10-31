@@ -58,7 +58,8 @@ def suggest_chart(result: dict) -> dict | None:
         return _base(result, "bar_horizontal", label, {"field": "count", "label": "Quantidade", "format": "integer"},
                      {"field": "category", "label": "", "sort": "desc_by_x"}, alt_text=f"Barras com {len(rows)} categorias.")
     if fn == "share_of_total" and rows:
-        return _base(result, "bar_horizontal", label, {"field": "total", "label": _axis(label, unit), "format": vfmt},
+        pct = vfmt and vfmt.startswith("percent")
+        return _base(result, "bar_horizontal", label, {"field": "share" if pct else "total", "label": _axis(label, unit), "format": vfmt},
                      {"field": "category", "label": "", "sort": "desc_by_x"},
                      color={"mode": "by_category", "field": "category"}, alt_text=f"Barras com {len(rows)} categorias.")
     if fn in ("concentration", "pareto_abc") and rows and "cum_share" in rows[0] and "item" in rows[0]:

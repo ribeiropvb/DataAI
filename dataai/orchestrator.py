@@ -334,13 +334,16 @@ def write_execution_summary(ws: Workspace) -> str:
     lines = [f"# Resumo da execução — {m['analysis_id']}", "",
              f"- **Pedido:** {req['question'] or 'exploração geral dos dados'}",
              f"- **Entregas pedidas:** {req['output_mode']}",
-             f"- **Modo:** {'agentes com IA (' + str((m.get('provider') or {}).get('name')) + ' / ' + str((m.get('provider') or {}).get('model')) + ')' if m.get('mode') == 'agents' else 'sem IA (planejamento por regras)'}",
+             f"- **Modo:** {'agentes com IA (' + str((m.get('provider') or {}).get('name')) + ' / ' + str((m.get('provider') or {}).get('model')) + ')' if m.get('mode') == 'agents' else ('harness externo seguindo as skills' if m.get('mode') == 'harness' else 'sem IA (planejamento por regras)')}",
              f"- **Situação:** {({'approved': 'aprovada', 'not_approved': 'NÃO APROVADA', 'needs_clarification': 'aguardando esclarecimento', 'blocked': 'bloqueada'}).get(m['status'], m['status'])}",
              "", "## Arquivos recebidos", ""]
     lines += [f"- {f['original_name']} (origem: {f.get('source_label')}; sha256 {f['sha256'][:12]}…)" for f in m["files"]]
-    latest = max((d["version"] for d in m["deliverables"]), default=None)
+    latest_by_kind = {}
+    for d in m["deliverables"]:
+        if d["kind"] not in latest_by_kind or d["version"] >= latest_by_kind[d["kind"]]["version"]:
+            latest_by_kind[d["kind"]] = d
     lines += ["", "## Entregas", ""]
-    lines += [f"- {d['artifact_ref']} (versão {d['version']}, sha256 {d['sha256'][:12]}…)" for d in m["deliverables"] if d["version"] == latest] or ["- nenhuma"]
+    lines += [f"- {d['artifact_ref']} (versão {d['version']}, sha256 {d['sha256'][:12]}…)" for d in latest_by_kind.values()] or ["- nenhuma"]
     lines += ["", "## Esclarecimentos e suposições", ""]
     lines += [f"- Esclarecimento: {c['question']} → {c['answer']}" for c in req.get("clarifications", [])]
     lines += [f"- Suposição: {a.get('assumption') if isinstance(a, dict) else a}" for a in m.get("assumptions", [])]

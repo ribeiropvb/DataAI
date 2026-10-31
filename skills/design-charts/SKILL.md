@@ -13,6 +13,8 @@ Define **o que** cada gráfico mostra e **como**, de forma que o relatório e o 
 
 ## Ferramentas
 
+> **Fora do orquestrador do DataAI** (por exemplo, num harness como Claude Code ou Codex), chame cada ferramenta citada nesta skill pelo terminal: `python -m dataai ferramenta <pasta_da_analise> <nome> '<json dos argumentos>'` (ou `@arquivo.json`). A saída é JSON. O passo a passo completo está em `CLAUDE.md`.
+
 `suggest_chart` (proposta de especificação a partir de um resultado), `save_chart` (valida e salva `charts/<chart_id>.json`; devolve os problemas se a especificação não bater com o resultado), `list_charts`, `get_result`, `list_results`. Código: `dataai/tools/charts.py`.
 
 - Tipos suportados: `kpi`, `bar_horizontal`, `column`, `line`, `histogram`, `heatmap`, `pareto`, `waterfall` (pontes de M10) e `table`.

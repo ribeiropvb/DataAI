@@ -13,6 +13,8 @@ Transforma os arquivos recebidos em datasets de trabalho confiáveis, sem perder
 
 ## Ferramentas
 
+> **Fora do orquestrador do DataAI** (por exemplo, num harness como Claude Code ou Codex), chame cada ferramenta citada nesta skill pelo terminal: `python -m dataai ferramenta <pasta_da_analise> <nome> '<json dos argumentos>'` (ou `@arquivo.json`). A saída é JSON. O passo a passo completo está em `CLAUDE.md`.
+
 Executada pelo código antes dos agentes: `dataai/tools/ingest.py` (`ingest(ws)`), chamado por `python -m dataai analisar`. O agente `data-specialist` lê o resultado com `list_datasets` e `preview_rows`.
 
 - Vários arquivos por análise (até 10, 50 MB no total). Cada CSV é uma tabela; cada aba `.xlsx` com dados é uma tabela (P-001).

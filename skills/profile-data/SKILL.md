@@ -13,6 +13,8 @@ Descobre **o que os dados são** antes que alguém calcule algo com eles. Esta s
 
 ## Ferramentas
 
+> **Fora do orquestrador do DataAI** (por exemplo, num harness como Claude Code ou Codex), chame cada ferramenta citada nesta skill pelo terminal: `python -m dataai ferramenta <pasta_da_analise> <nome> '<json dos argumentos>'` (ou `@arquivo.json`). A saída é JSON. O passo a passo completo está em `CLAUDE.md`.
+
 Executada pelo código: `dataai/tools/profile.py` (`profile(ws)`), que grava `results/profile_<dataset_id>.json`. O agente `data-specialist` revisa com `get_profile`, `preview_rows` e corrige tipos com `set_semantic_type` (com justificativa, registrada como tratamento).
 
 - A qualidade (M1) é calculada pelas mesmas funções do catálogo (`quality_completeness`, `quality_uniqueness`, `quality_validity`, `quality_consistency`, `quality_temporal_coverage`) e fica como resultado reexecutável.

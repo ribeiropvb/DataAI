@@ -758,6 +758,7 @@ Descobrir não é usar. `plan-analysis` escolhe quais ligações a análise exig
 | Execução de agentes | `dataai/agents/` | Monta as instruções do agente (perfil + `SKILL.md`), expõe as ferramentas por chamada de função e executa o ciclo até a resposta final. |
 | Provedor de IA | `dataai/llm/` | Interface única com adaptadores para Claude (Anthropic) e OpenAI. O provedor é escolhido pela chave de API configurada (Claude tem prioridade se houver as duas); o modelo tem padrão e pode ser trocado por configuração (P-017). |
 | Orquestração | `dataai/orchestrator.py` | Encadeia as etapas, aplica os ciclos de revisão (P-012) e escreve o resumo da execução (RN-015). |
+| Modo harness | `dataai/harness.py`, `CLAUDE.md`, `AGENTS.md` | Um agente externo com terminal (Claude Code, Codex) faz o papel dos agentes seguindo as skills e chama as mesmas ferramentas por linha de comando (`preparar`, `ferramenta`, `revisar`). A revisão determinística continua obrigatória. |
 | Modo sem IA | `--no-llm` | Executa o fluxo com planejamento heurístico e texto em modelo fixo, para testar ferramentas e entregas antes de escolher o provedor. Não substitui os agentes. |
 
 O LLM decide (planejar, escolher gráficos, redigir, revisar) e as ferramentas calculam. O texto do relatório referencia resultados por marcadores (`{{res_id.campo}}`) que o código substitui pelos valores calculados, de modo que nenhum número do PDF é digitado pelo modelo.

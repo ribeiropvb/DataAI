@@ -13,6 +13,8 @@ Responde à pergunta: **os números estão certos e são os mesmos em todo lugar
 
 ## Ferramentas
 
+> **Fora do orquestrador do DataAI** (por exemplo, num harness como Claude Code ou Codex), chame cada ferramenta citada nesta skill pelo terminal: `python -m dataai ferramenta <pasta_da_analise> <nome> '<json dos argumentos>'` (ou `@arquivo.json`). A saída é JSON. O passo a passo completo está em `CLAUDE.md`.
+
 `run_validation` (`dataai/tools/validate.py`), que executa as verificações abaixo de forma determinística e devolve `decision`, `checks` e `issues`. O agente `technical-reviewer` interpreta o resultado e pode conferir pontos com `get_result`, `list_results`, `inspect_report` e `inspect_dashboard`. A ferramenta verifica:
 
 - envelopes das skills e perguntas sem resposta nem suposição;

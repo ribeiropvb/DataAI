@@ -88,6 +88,8 @@ Outras opções: `--origem arquivo.csv=ERP` informa a origem de um arquivo; `--e
 
 Cada análise fica em `analyses/<id>/` com os originais, os dados de trabalho, os resultados versionados, os gráficos, as entregas (`deliverables/v<N>/`), a revisão e o `execution_summary.md`.
 
+**Por um harness** (Claude Code, Codex ou outro agente com terminal): mande o link do repositório e os arquivos e peça a análise. O harness lê o [`CLAUDE.md`](CLAUDE.md) (ou `AGENTS.md`), faz o papel dos agentes seguindo as skills e chama as ferramentas por `python -m dataai preparar`, `python -m dataai ferramenta <pasta> <nome> '<json>'` e `python -m dataai revisar <pasta>`. Os números continuam saindo só das ferramentas e a revisão automática continua obrigatória. `python scripts/install_skills.py` copia as skills para `.claude/skills` (ou `--global`).
+
 **Testes:** `python -m pytest -q tests`.
 
 ### Estrutura do código
@@ -98,6 +100,7 @@ Cada análise fica em `analyses/<id>/` com os originais, os dados de trabalho, o
 | `dataai/agents/` | Monta cada agente (perfil + `SKILL.md`), expõe as ferramentas permitidas e executa o ciclo de chamadas. |
 | `dataai/llm/` | Interface única de provedor de IA, com adaptadores. |
 | `dataai/orchestrator.py` | Encadeia as etapas e os ciclos de revisão. |
+| `dataai/harness.py` | Comandos para um harness externo conduzir a análise com as skills. |
 | `agents/` | Perfis dos oito agentes. |
 | `skills/` | Instruções dos agentes. |
 | `examples/` | Gerador de dados de demonstração com sete arquivos ligados entre si. |

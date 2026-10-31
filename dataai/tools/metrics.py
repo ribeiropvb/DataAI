@@ -1262,7 +1262,7 @@ def compute(spec: dict, ws, save: bool = True) -> dict:
                         "source_label": m.get("source_label"), "parents": m.get("parents", []),
                         "columns": cols})
     result = {
-        "result_id": spec.get("result_id") or f"res_{spec['metric_id']}",
+        "result_id": spec.get("result_id") or (spec["metric_id"] if spec["metric_id"].startswith("res_") else f"res_{spec['metric_id']}"),
         "metric_id": spec["metric_id"],
         "label": spec.get("label", meta["label"]),
         "family": meta["family"],

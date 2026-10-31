@@ -3,6 +3,12 @@
     python -m dataai analisar dados/*.csv dados/cadastro.xlsx --pergunta "..." --entrega both
     python -m dataai analisar dados/* --no-llm            # sem IA, para testar ferramentas e entregas
     python -m dataai catalogo                             # lista as métricas disponíveis (M1–M15)
+
+Modo harness (um agente externo faz o papel dos agentes; ver CLAUDE.md):
+    python -m dataai preparar dados/* --pergunta "..." --entrega both
+    python -m dataai ferramenta <pasta> --listar
+    python -m dataai ferramenta <pasta> compute_metric '{"spec": {...}}'   # ou @arquivo.json
+    python -m dataai revisar <pasta>
 """
 from __future__ import annotations
 
@@ -41,7 +47,50 @@ def main(argv: list[str] | None = None) -> int:
     a.add_argument("--interativo", action="store_true", help="faz as perguntas de esclarecimento no terminal")
     a.add_argument("--echarts-local", default=None, help="caminho de echarts.min.js para embutir no HTML (uso offline)")
     sub.add_parser("catalogo", help="lista as funções de métrica")
+    p = sub.add_parser("preparar", help="modo harness: lê os arquivos, perfila e mapeia ligações (sem IA)")
+    p.add_argument("arquivos", nargs="+")
+    p.add_argument("--pergunta", default=None)
+    p.add_argument("--entrega", default="both", choices=["report", "dashboard", "both"])
+    p.add_argument("--pasta", default="analyses")
+    p.add_argument("--origem", action="append", default=[], metavar="ARQUIVO=ROTULO")
+    p.add_argument("--resposta", action="append", default=[], metavar="PERGUNTA_ID=VALOR",
+                   help="resposta a uma pergunta de esclarecimento devolvida por uma execução anterior")
+    f = sub.add_parser("ferramenta", help="modo harness: chama uma ferramenta das skills")
+    f.add_argument("pasta_analise")
+    f.add_argument("nome", nargs="?")
+    f.add_argument("argumentos", nargs="?", default="{}", help="JSON com os argumentos, ou @arquivo.json")
+    f.add_argument("--listar", action="store_true")
+    f.add_argument("--versao", type=int, default=None, help="versão das entregas (padrão: automática)")
+    r = sub.add_parser("revisar", help="modo harness: validação técnica e revisão de qualidade determinística")
+    r.add_argument("pasta_analise")
     args = ap.parse_args(argv)
+
+    if args.cmd in ("preparar", "ferramenta", "revisar"):
+        from . import harness
+        if args.cmd == "preparar":
+            out = harness.prepare(args.arquivos, args.pergunta, args.entrega, args.pasta,
+                                  dict(x.split("=", 1) for x in args.resposta if "=" in x),
+                                  dict(o.split("=", 1) for o in args.origem if "=" in o))
+            print(json.dumps(out, ensure_ascii=False, indent=2, default=str))
+            return 0 if out["status"] == "prepared" else 3
+        if args.cmd == "ferramenta":
+            if args.listar or not args.nome:
+                print(json.dumps(harness.list_tools(args.pasta_analise), ensure_ascii=False, indent=2))
+                return 0
+            raw = args.argumentos
+            if raw.startswith("@"):
+                raw = Path(raw[1:]).read_text(encoding="utf-8")
+            try:
+                arguments = json.loads(raw or "{}")
+            except json.JSONDecodeError as e:
+                print(json.dumps({"error": f"JSON inválido: {e}"}, ensure_ascii=False))
+                return 2
+            out = harness.call_tool(args.pasta_analise, args.nome, arguments, args.versao)
+            print(out)
+            return 1 if out.startswith('{"error"') else 0
+        out = harness.review(args.pasta_analise)
+        print(json.dumps(out, ensure_ascii=False, indent=2, default=str))
+        return 0
 
     if args.cmd == "catalogo":
         from .tools.metrics import catalog_summary

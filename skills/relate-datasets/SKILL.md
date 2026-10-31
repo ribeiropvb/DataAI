@@ -13,6 +13,8 @@ Um arquivo não é uma tabela (RN-017). Esta skill descobre como os arquivos se 
 
 ## Ferramentas
 
+> **Fora do orquestrador do DataAI** (por exemplo, num harness como Claude Code ou Codex), chame cada ferramenta citada nesta skill pelo terminal: `python -m dataai ferramenta <pasta_da_analise> <nome> '<json dos argumentos>'` (ou `@arquivo.json`). A saída é JSON. O passo a passo completo está em `CLAUDE.md`.
+
 | Etapa | Função (`dataai/tools/relations.py`) |
 |---|---|
 | Partições e empilhamento | `relationship_map(ws)` → usa `detect_partitions` e `stack_partitions` |
