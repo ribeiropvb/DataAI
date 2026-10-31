@@ -4,7 +4,7 @@ Análise de dados com agentes de IA para quem não programa.
 
 Você envia um ou mais arquivos CSV ou Excel, faz uma pergunta sobre eles (ou pede uma exploração geral) e recebe um **relatório PDF** com a interpretação dos resultados, um **dashboard HTML** com as visualizações, ou os dois. Os números são calculados por ferramentas de verdade, nunca estimados pelo modelo, e toda entrega passa por uma revisão de qualidade antes de ser liberada.
 
-> **Situação:** especificação na versão 1.3 ([`specs.md`](specs.md)), skills escritas e implementação de referência em Python funcionando ponta a ponta (com IA ou no modo sem IA). Falta escolher o provedor e o modelo de IA.
+> **Situação:** especificação na versão 1.3 ([`specs.md`](specs.md)), skills escritas e implementação de referência em Python funcionando ponta a ponta (com IA ou no modo sem IA). Provedor de IA: Claude ou OpenAI, escolhido pela chave configurada.
 
 ## Para quem é
 
@@ -69,14 +69,14 @@ python examples/generate_demo.py
 python -m dataai analisar examples/demo_varejo/* --no-llm --entrega both
 ```
 
-**Com IA:** o código não depende de um provedor específico. Configure por variáveis de ambiente:
+**Com IA:** o MVP usa **Claude (Anthropic)** ou **OpenAI**. Basta definir a chave de um deles; com as duas, Claude é usado.
 
-| Variável | Valores |
+| Variável | Uso |
 |---|---|
-| `DATAAI_PROVIDER` | `anthropic`, `openai` ou `openai_compatible` (qualquer serviço com a API de chat da OpenAI, inclusive modelos locais) |
-| `DATAAI_MODEL` | nome do modelo |
-| `DATAAI_API_KEY` | chave da API (ou a variável padrão do provedor) |
-| `DATAAI_BASE_URL` | endereço do serviço, para `openai_compatible` |
+| `ANTHROPIC_API_KEY` | chave do Claude (modelo padrão `claude-sonnet-5-5`) |
+| `OPENAI_API_KEY` | chave da OpenAI (modelo padrão `gpt-5`) |
+| `DATAAI_PROVIDER` | opcional: força `anthropic`, `openai` ou `openai_compatible` (serviço compatível com a API da OpenAI, com `DATAAI_BASE_URL`) |
+| `DATAAI_MODEL` | opcional: troca o modelo padrão |
 
 Instale o adaptador com `pip install -e ".[anthropic]"` ou `".[openai]"` e rode:
 
@@ -110,7 +110,6 @@ Cada análise fica em `analyses/<id>/` com os originais, os dados de trabalho, o
 
 ## Pendências
 
-- Escolha do provedor e do modelo de IA (o código já aceita qualquer um dos adaptadores).
 - Metas como referência (P-019) e fonte oficial quando duas fontes divergem (P-020).
 - Confirmação dos limites de entrada propostos (10 arquivos e 50 MB).
 - Demais decisões listadas na seção 16 do [`specs.md`](specs.md).

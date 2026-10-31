@@ -589,7 +589,7 @@ A convenção estatística do pacote deve ser ratificada ou substituída explici
 | Modelo e provedor de IA | Não definidos. |
 | Backend, frontend, banco, armazenamento, fila e hospedagem | Não definidos como arquitetura definitiva. |
 
-**Confirmado na revisão 1.2:** o DataAI não utilizará CrewAI nem n8n. Toda a coordenação será feita por agentes baseados em LLM, chamados pelo código da própria aplicação, que fornece a eles as skills e as ferramentas (leitura de arquivos, cálculo, geração de PDF/HTML e renderização para revisão). A sugestão do pacote de usar n8n como porta de entrada fica sem efeito. Continuam em aberto o provedor e o modelo de IA (P-017).
+**Confirmado na revisão 1.2:** o DataAI não utilizará CrewAI nem n8n. Toda a coordenação será feita por agentes baseados em LLM, chamados pelo código da própria aplicação, que fornece a eles as skills e as ferramentas (leitura de arquivos, cálculo, geração de PDF/HTML e renderização para revisão). A sugestão do pacote de usar n8n como porta de entrada fica sem efeito. Provedor de IA: Claude (Anthropic) ou OpenAI, decidido por Pedro em 31/10/2026 (P-017).
 
 Os códigos de entrega existentes no pacote são `output_mode=report`, `output_mode=dashboard` e `output_mode=both`. Esses valores representam a modalidade de saída; não representam análise direcionada versus exploração geral. Não há nome de campo ou enumeração técnica aprovada para esses dois modos de análise.
 
@@ -756,7 +756,7 @@ Descobrir não é usar. `plan-analysis` escolhe quais ligações a análise exig
 | Pasta e manifesto da análise | `dataai/workspace.py` | Pasta por análise, hashes, versões e manifesto (P-009). |
 | Perfis de agentes | `agents/*.yaml` | Oito perfis: papel, skills, ferramentas permitidas, saída esperada e limites. |
 | Execução de agentes | `dataai/agents/` | Monta as instruções do agente (perfil + `SKILL.md`), expõe as ferramentas por chamada de função e executa o ciclo até a resposta final. |
-| Provedor de IA | `dataai/llm/` | Interface única, independente de provedor, com adaptadores opcionais. O provedor e o modelo são configuração (P-017). |
+| Provedor de IA | `dataai/llm/` | Interface única com adaptadores para Claude (Anthropic) e OpenAI. O provedor é escolhido pela chave de API configurada (Claude tem prioridade se houver as duas); o modelo tem padrão e pode ser trocado por configuração (P-017). |
 | Orquestração | `dataai/orchestrator.py` | Encadeia as etapas, aplica os ciclos de revisão (P-012) e escreve o resumo da execução (RN-015). |
 | Modo sem IA | `--no-llm` | Executa o fluxo com planejamento heurístico e texto em modelo fixo, para testar ferramentas e entregas antes de escolher o provedor. Não substitui os agentes. |
 
@@ -952,7 +952,7 @@ Não foi criado um critério de aceite obrigatório que aprove automaticamente e
 | P-014 | Quais capacidades adicionais ficam explicitamente fora do MVP? | Escopo confirmado é descritivo; lista de exclusões do documento inicial era proposta. | Evita prometer inferência, previsão ou integrações sem definição. |
 | P-015 | Quais controles serão oferecidos ao perfil de analista e em qual versão? | Intenção de atender ambos os perfis confirmada; primeiro público é o não programador. | Afeta evolução, sem obrigar modo avançado imediato. |
 | P-016 | Quais padrões de métricas, quantis, desvio-padrão e seleção/priorização de achados serão fixos? Como registrar evidências? | Abrangência confirmada (RF-022); catálogo, limiares e convenções propostos em 12.7. | Bloqueia contrato analítico definitivo e parte da validação automática. |
-| P-017 | Qual arquitetura de execução e produção: provedor de IA, fila, hospedagem, custos, tempo e cancelamento? | CrewAI e n8n descartados; agentes LLM com código próprio confirmados. Proposta para o MVP em 16.3. | Bloqueia implantação e operação com limites definidos. |
+| P-017 | Qual arquitetura de execução e produção: provedor de IA, fila, hospedagem, custos, tempo e cancelamento? | CrewAI e n8n descartados; agentes LLM com código próprio confirmados; provedor Claude ou OpenAI confirmado. Fila, hospedagem e custos seguem em proposta (16.3). | Bloqueia implantação e operação com limites definidos. |
 | P-018 | Qual desenho de telas e distribuição de validações entre interface, serviço e banco? | Interações principais definidas; sem telas, rotas ou responsabilidades técnicas aprovadas. | Bloqueia detalhamento final da interface e das validações por camada. |
 | P-019 | De onde vêm metas e referências para as métricas de comparação (M8)? | Proposta MVP: usar colunas de meta existentes nos dados ou valores informados pelo usuário no pedido; sem isso, comparar com período anterior, média geral ou outros grupos. Nunca inventar meta. | Sem meta, atingimento e lacuna não são calculados. |
 | P-020 | Quando duas fontes divergem sobre a mesma medida ou atributo, qual prevalece? | Proposta MVP: nenhuma prevalece automaticamente; a divergência é medida (M14) e reportada; se afetar materialmente a resposta, o usuário escolhe a fonte. | Afeta resultados que dependem de fontes sobrepostas. |
@@ -999,7 +999,7 @@ O MVP é uma versão inicial, executada localmente por um único usuário, cujo 
 | P-012 | Até 3 ciclos de revisão. Problemas são classificados como **defeito** (impede a aprovação) ou **sugestão** (opcional). Se um defeito persistir após o terceiro ciclo, a entrega é disponibilizada marcada como "não aprovada", com a lista de defeitos no resumo da execução. Nunca é apresentada como aprovada. |
 | P-013 | Arquivo inválido ou não suportado: informar e prosseguir com os demais somente se o pedido não depender dele; caso contrário, bloquear a análise. Se só parte do pedido for viável, entregar a parte viável identificada como parcial. Falta de ferramenta de geração ou renderização bloqueia a entrega afetada. |
 | P-016 | Adotar o catálogo da seção 12.7 (15 famílias, de qualidade a sensibilidade) e as convenções do pacote: desvio-padrão com `ddof=1`, quantis pelo método linear, precisão interna completa e arredondamento só na apresentação. A seleção dos achados prioriza os que respondem ao objetivo e, na exploração geral, os que cobrem mais perguntas de decisão (12.7.2) com maior magnitude. Todo número cita a origem do cálculo. |
-| P-017 | Execução local em Python, com agentes LLM coordenados pelo código da aplicação (sem CrewAI e sem n8n). Sem fila nem hospedagem no MVP: uma análise por vez. **Falta escolher o provedor e o modelo de IA.** Registrar o custo de tokens por análise para servir de base a limites futuros. |
+| P-017 | Execução local em Python, com agentes LLM coordenados pelo código da aplicação (sem CrewAI e sem n8n). Sem fila nem hospedagem no MVP: uma análise por vez. **Provedor decidido: Claude ou OpenAI** (escolha automática pela chave configurada; modelo configurável). Registrar o custo de tokens por análise para servir de base a limites futuros. |
 
 **B. Versão simplificada no MVP**
 

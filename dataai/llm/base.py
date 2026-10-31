@@ -49,12 +49,27 @@ class ProviderConfigError(RuntimeError):
     pass
 
 
+DEFAULT_MODELS = {"anthropic": "claude-sonnet-5-5", "openai": "gpt-5"}
+
+
+def detect_provider() -> str | None:
+    """Provedor pela configuração: DATAAI_PROVIDER ou, sem ela, pela chave existente (Claude tem prioridade)."""
+    name = (os.environ.get("DATAAI_PROVIDER") or "").strip().lower()
+    if name:
+        return name
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        return "anthropic"
+    if os.environ.get("OPENAI_API_KEY"):
+        return "openai"
+    return None
+
+
 def get_provider(name: str | None = None, model: str | None = None, **kwargs) -> LLMProvider:
-    name = (name or os.environ.get("DATAAI_PROVIDER") or "").strip().lower()
-    model = model or os.environ.get("DATAAI_MODEL")
+    name = (name or detect_provider() or "").strip().lower()
     if not name:
-        raise ProviderConfigError("Provedor de IA não configurado. Defina DATAAI_PROVIDER e DATAAI_MODEL "
-                                  "ou rode com --no-llm (specs P-017).")
+        raise ProviderConfigError("Provedor de IA não configurado. Defina ANTHROPIC_API_KEY (Claude) ou OPENAI_API_KEY "
+                                  "(OpenAI), ou DATAAI_PROVIDER, ou rode com --no-llm.")
+    model = model or os.environ.get("DATAAI_MODEL") or DEFAULT_MODELS.get(name)
     if not model:
         raise ProviderConfigError("Defina DATAAI_MODEL com o identificador do modelo escolhido.")
     api_key = kwargs.pop("api_key", None) or os.environ.get("DATAAI_API_KEY")
