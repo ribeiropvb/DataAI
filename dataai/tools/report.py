@@ -10,32 +10,18 @@ import html
 import re
 from pathlib import Path
 
+from .. import theme
 from ..workspace import Workspace, now_iso, sha256_file
 from .charts import ColorMap, render_png
 from .fmt import format_value
 from .refs import RefError, render_markers, unresolved_numbers
 
-ACCENT = "#1E3A8A"
+ACCENT = theme.BRAND_STRONG
 
 
 def _fonts():
-    from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.ttfonts import TTFont
-    try:
-        import matplotlib
-        base = Path(matplotlib.get_data_path()) / "fonts" / "ttf"
-        if "DejaVu" not in pdfmetrics.getRegisteredFontNames():
-            pdfmetrics.registerFont(TTFont("DejaVu", str(base / "DejaVuSans.ttf")))
-            pdfmetrics.registerFont(TTFont("DejaVu-Bold", str(base / "DejaVuSans-Bold.ttf")))
-            pdfmetrics.registerFont(TTFont("DejaVu-Oblique", str(base / "DejaVuSans-Oblique.ttf")))
-            from reportlab.lib.fonts import addMapping
-            addMapping("DejaVu", 0, 0, "DejaVu")
-            addMapping("DejaVu", 1, 0, "DejaVu-Bold")
-            addMapping("DejaVu", 0, 1, "DejaVu-Oblique")
-            addMapping("DejaVu", 1, 1, "DejaVu-Bold")
-        return "DejaVu", "DejaVu-Bold"
-    except Exception:  # pragma: no cover
-        return "Helvetica", "Helvetica-Bold"
+    f = theme.register_pdf_fonts()
+    return f["regular"], f["bold"]
 
 
 def _styles():
@@ -43,15 +29,16 @@ def _styles():
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     reg, bold = _fonts()
     ss = getSampleStyleSheet()
-    ink = HexColor("#111827")
+    ink = HexColor(theme.INK)
+    muted = HexColor(theme.INK_MUTED)
     return {
-        "title": ParagraphStyle("t", parent=ss["Title"], fontName=bold, fontSize=24, leading=29, textColor=HexColor(ACCENT), alignment=0, spaceAfter=10),
-        "subtitle": ParagraphStyle("st", parent=ss["Normal"], fontName=reg, fontSize=12.5, leading=17, textColor=HexColor("#374151")),
-        "h1": ParagraphStyle("h1", parent=ss["Heading1"], fontName=bold, fontSize=15, leading=19, textColor=HexColor(ACCENT), spaceBefore=12, spaceAfter=6),
-        "h2": ParagraphStyle("h2", parent=ss["Heading2"], fontName=bold, fontSize=12, leading=15, textColor=ink, spaceBefore=8, spaceAfter=4),
+        "title": ParagraphStyle("t", parent=ss["Title"], fontName=bold, fontSize=26, leading=31, textColor=ink, alignment=0, spaceAfter=10),
+        "subtitle": ParagraphStyle("st", parent=ss["Normal"], fontName=reg, fontSize=12.5, leading=17, textColor=muted),
+        "h1": ParagraphStyle("h1", parent=ss["Heading1"], fontName=bold, fontSize=15, leading=19, textColor=HexColor(ACCENT), spaceBefore=12, spaceAfter=6, keepWithNext=1),
+        "h2": ParagraphStyle("h2", parent=ss["Heading2"], fontName=bold, fontSize=12, leading=15, textColor=ink, spaceBefore=8, spaceAfter=4, keepWithNext=1),
         "body": ParagraphStyle("b", parent=ss["Normal"], fontName=reg, fontSize=10.5, leading=15, textColor=ink, spaceAfter=6),
-        "small": ParagraphStyle("s", parent=ss["Normal"], fontName=reg, fontSize=8.5, leading=11, textColor=HexColor("#4B5563")),
-        "caption": ParagraphStyle("c", parent=ss["Normal"], fontName=reg, fontSize=8.5, leading=11, textColor=HexColor("#4B5563"), spaceAfter=8),
+        "small": ParagraphStyle("s", parent=ss["Normal"], fontName=reg, fontSize=8.5, leading=11, textColor=muted),
+        "caption": ParagraphStyle("c", parent=ss["Normal"], fontName=reg, fontSize=8.5, leading=11, textColor=muted, spaceAfter=8),
         "cell": ParagraphStyle("cell", parent=ss["Normal"], fontName=reg, fontSize=8.5, leading=10.5, textColor=ink),
         "cellb": ParagraphStyle("cellb", parent=ss["Normal"], fontName=bold, fontSize=8.5, leading=10.5, textColor=ink),
         "finding_title": ParagraphStyle("ft", parent=ss["Normal"], fontName=bold, fontSize=10.5, leading=14, textColor=HexColor(ACCENT)),
@@ -96,7 +83,7 @@ def build_report(ws: Workspace, doc: dict, version: int, include_appendix: bool 
 
     story = []
     # capa
-    story += [Spacer(1, 5 * cm), Paragraph(_md(doc["title"]), st["title"])]
+    story += [Spacer(1, 3.6 * cm), _logo_flowable(1.6 * cm), Spacer(1, 0.9 * cm), Paragraph(_md(doc["title"]), st["title"])]
     if doc.get("subtitle"):
         story.append(Paragraph(_md(text(doc["subtitle"], "capa")), st["subtitle"]))
     files = ", ".join(f["original_name"] for f in ws.manifest["files"])
@@ -123,10 +110,11 @@ def build_report(ws: Workspace, doc: dict, version: int, include_appendix: bool 
                     if b.get(key):
                         rows.append([Paragraph(f"<b>{lab}:</b> " + _md(text(b[key], where)), st["body"])])
                 tb = Table(rows, colWidths=[16.5 * cm])
-                tb.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), HexColor("#F1F5F9")),
-                                        ("LINEBEFORE", (0, 0), (0, -1), 3, HexColor("#2563EB")),
-                                        ("LEFTPADDING", (0, 0), (-1, -1), 10), ("TOPPADDING", (0, 0), (-1, -1), 4),
-                                        ("BOTTOMPADDING", (0, 0), (-1, -1), 2)]))
+                tb.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), HexColor(theme.SURFACE_RAISED)),
+                                        ("LINEABOVE", (0, 0), (-1, 0), 1.2, HexColor(theme.BRAND)),
+                                        ("LEFTPADDING", (0, 0), (-1, -1), 10), ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                                        ("TOPPADDING", (0, 0), (0, 0), 7), ("TOPPADDING", (0, 1), (-1, -1), 3),
+                                        ("BOTTOMPADDING", (0, 0), (-1, -1), 2), ("BOTTOMPADDING", (0, -1), (-1, -1), 7)]))
                 story += [KeepTogether([tb]), Spacer(1, 8)]
             elif t == "chart":
                 try:
@@ -155,8 +143,8 @@ def build_report(ws: Workspace, doc: dict, version: int, include_appendix: bool 
                 for r in (res.get("rows") or [])[: b.get("max_rows", 15)]:
                     data.append([Paragraph(html.escape(format_value(r.get(c), fmts.get(c))), st["cell"]) for c in cols])
                 tb = Table(data, repeatRows=1, colWidths=[16.5 * cm / len(cols)] * len(cols))
-                tb.setStyle(TableStyle([("LINEBELOW", (0, 0), (-1, 0), 0.8, HexColor("#94A3B8")),
-                                        ("LINEBELOW", (0, 1), (-1, -1), 0.3, HexColor("#E2E8F0")),
+                tb.setStyle(TableStyle([("LINEBELOW", (0, 0), (-1, 0), 0.8, HexColor(theme.INK_MUTED)),
+                                        ("LINEBELOW", (0, 1), (-1, -1), 0.3, HexColor(theme.LINE)),
                                         ("VALIGN", (0, 0), (-1, -1), "TOP")]))
                 story += [tb, Paragraph(_md(b.get("caption") or f"Fonte: {res.get('label')} ({b['result_id']})."), st["caption"])]
             elif t == "tool_note":
@@ -179,9 +167,12 @@ def build_report(ws: Workspace, doc: dict, version: int, include_appendix: bool 
     def on_page(canvas, d):
         canvas.saveState()
         canvas.setFont(reg, 8)
-        canvas.setFillColor(HexColor("#6B7280"))
+        canvas.setFillColor(HexColor(theme.INK_MUTED))
         if d.page > 1:
-            canvas.drawString(2 * cm, 1.2 * cm, doc["title"][:90])
+            canvas.setStrokeColor(HexColor(theme.LINE))
+            canvas.setLineWidth(0.5)
+            canvas.line(2 * cm, 1.6 * cm, A4[0] - 2 * cm, 1.6 * cm)
+            canvas.drawString(2 * cm, 1.2 * cm, ("DataAI · " + doc["title"])[:96])
             canvas.drawRightString(A4[0] - 2 * cm, 1.2 * cm, f"Página {d.page}")
         canvas.restoreState()
 
@@ -197,6 +188,21 @@ def build_report(ws: Workspace, doc: dict, version: int, include_appendix: bool 
     return {"stage": "artifact", "artifact_ref": rec["artifact_ref"], "version": version, "sha256": sha256_file(path),
             "pages": pages, "sections": [s["heading"] for s in doc.get("sections", [])], "charts_included": charts_included,
             "number_refs": refs, "renderer": "reportlab", "errors": errors, "raw_numbers": raw_numbers}
+
+
+def _logo_flowable(size: float):
+    """Símbolo do DataAI desenhado em vetor (mesma geometria de dataai/brand/dataai-marca-claro.svg)."""
+    from reportlab.graphics.shapes import Circle, Drawing, Rect
+    from reportlab.lib.colors import HexColor
+    k = size / 64.0
+    d = Drawing(size, size)
+    y = lambda top, h: (64 - top - h) * k  # SVG tem origem no topo
+    d.add(Rect(0, 0, 64 * k, 64 * k, rx=14 * k, ry=14 * k, fillColor=HexColor(theme.color("petroleo-600")), strokeColor=None))
+    for x, top, w, h in ((13, 24, 10, 26), (27, 35, 10, 15), (42.5, 29, 5, 21)):
+        d.add(Rect(x * k, y(top, h), w * k, h * k, rx=2.5 * k, ry=2.5 * k, fillColor=HexColor("#FFFFFF"), strokeColor=None))
+    d.add(Circle(45 * k, (64 - 22) * k, 6.5 * k, fillColor=HexColor(theme.color("ocre-claro")), strokeColor=None))
+    d.hAlign = "LEFT"
+    return d
 
 
 def _appendix(ws: Workspace, result_ids: list[str], st: dict, n: int) -> list:
@@ -219,7 +225,7 @@ def _appendix(ws: Workspace, result_ids: list[str], st: dict, n: int) -> list:
                      Paragraph(html.escape(f"n = {format_value(r.get('n'), 'integer')}; excluídos = {format_value(r.get('excluded'), 'integer')}"), st["cell"]),
                      Paragraph(html.escape(origin), st["cell"])])
     tb = Table(rows, colWidths=[3.6 * cm, 6.4 * cm, 2.8 * cm, 4.2 * cm], repeatRows=1)
-    tb.setStyle(TableStyle([("LINEBELOW", (0, 0), (-1, -1), 0.3, HexColor("#E2E8F0")), ("VALIGN", (0, 0), (-1, -1), "TOP")]))
+    tb.setStyle(TableStyle([("LINEBELOW", (0, 0), (-1, -1), 0.3, HexColor(theme.LINE)), ("VALIGN", (0, 0), (-1, -1), "TOP")]))
     out.append(tb)
     out.append(Paragraph("Tratamentos aplicados aos dados", st["h2"]))
     for t in ws.manifest.get("treatments", []):

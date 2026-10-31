@@ -32,5 +32,8 @@ dataai = "dataai.cli:main"
 [tool.setuptools.packages.find]
 include = ["dataai*"]
 
+[tool.setuptools.package-data]
+dataai = ["brand/*.json", "brand/*.svg", "brand/fonts/*.ttf", "brand/fonts/*.txt"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

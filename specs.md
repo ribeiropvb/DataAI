@@ -1,8 +1,8 @@
 # DataAI — Especificação consolidada da aplicação
 
 **Arquivo:** `specs.md`  
-**Versão do documento:** 1.3  
-**Data da consolidação:** 24/10/2026 (revisões 1.2 e 1.3 em 31/10/2026)  
+**Versão do documento:** 1.4  
+**Data da consolidação:** 24/10/2026 (revisões 1.2, 1.3 e 1.4 em 31/10/2026)  
 **Idioma:** português  
 **Base:** decisões e artefatos discutidos nesta conversa até a solicitação desta especificação.
 
@@ -183,7 +183,7 @@ As entregas devem poder incluir gráficos compatíveis com a análise. Não aten
 
 ### RF-012 — Aplicar cuidado visual às entregas
 
-A produção dos dashboards deve contemplar composição visual, uso de cores, hierarquia e legibilidade. A expectativa inclui corrigir resultados monótonos ou visualmente fracos. Não há paleta de marca definitiva acordada.
+A produção dos dashboards deve contemplar composição visual, uso de cores, hierarquia e legibilidade. A expectativa inclui corrigir resultados monótonos ou visualmente fracos. **Revisão 1.4 (confirmado pelo usuário):** a identidade visual do DataAI (paleta, tipografia, símbolo e regras de uso) foi aprovada e está na seção 12.10.
 
 ### RF-013 — Revisar criticamente o resultado final
 
@@ -518,6 +518,7 @@ O projeto pretende utilizar múltiplos agentes especializados. O pacote `dataai-
 | `write-analysis-report` | Produzir PDF, interpretação e storytelling. | `report-writer` |
 | `validate-analysis` | Auditar números, relações, contratos e consistência. | `technical-reviewer` |
 | `orchestrate-quality-review` | Revisar entregas finais, direcionar correções e decidir liberação. | `quality-orchestrator` |
+| `brand-identity` | Guardar a identidade visual aprovada e dizer como aplicá-la (revisão 1.4, seção 12.10). | `visualization-specialist`, `interface-designer`, `report-writer` |
 
 Os oito perfis declarativos estão em `agents/*.yaml` deste repositório (revisão 1.3). Eles são lidos pelo código da aplicação (seção 12.9); sozinhos, não criam agentes executáveis. A execução dos agentes será feita pela própria aplicação, sem CrewAI (ver 12.5).
 
@@ -762,6 +763,20 @@ Descobrir não é usar. `plan-analysis` escolhe quais ligações a análise exig
 | Modo sem IA | `--no-llm` | Executa o fluxo com planejamento heurístico e texto em modelo fixo, para testar ferramentas e entregas antes de escolher o provedor. Não substitui os agentes. |
 
 O LLM decide (planejar, escolher gráficos, redigir, revisar) e as ferramentas calculam. O texto do relatório referencia resultados por marcadores (`{{res_id.campo}}`) que o código substitui pelos valores calculados, de modo que nenhum número do PDF é digitado pelo modelo.
+
+### 12.10. Identidade visual (revisão 1.4)
+
+**Situação:** confirmada pelo usuário em 31/10/2026. A skill `brand-identity` é a dona da identidade; `design-charts`, `compose-dashboard` e `write-analysis-report` a aplicam.
+
+| Item | Decisão |
+|---|---|
+| Princípios | O dado fala primeiro; descrever, não julgar (nenhuma cor diz se um valor é bom ou ruim); todo número mostra a origem; legível para quem não programa. |
+| Cor da marca | Petróleo `#067689`, com neutros "ardósia" levemente puxados para ela. Temas claro (padrão e PDF) e escuro (dashboard, por `prefers-color-scheme`). Texto com contraste mínimo de 4,5:1 nos dois temas. |
+| Estados do sistema | `sucesso` (família da marca, fora do eixo verde-vermelho), `atencao`, `erro` e `info`, sempre com ícone e palavra e só para estados do sistema. |
+| Cores de dados | Oito categóricas em ordem testada para daltonismo (petróleo, ocre, vinho, azul, ameixa, laranja, violeta, verde); até seis só com legenda; sequencial petróleo; divergente laranja-neutro-petróleo, usada também para variação positiva e negativa. |
+| Tipografia | IBM Plex Sans e IBM Plex Mono (licença OFL), embutidas no pacote para o PDF e os gráficos. |
+| Símbolo | "Barra-fonte": duas barras e um traço com ponto (lê como o "i" de AI); versões clara, escura e monocromática. |
+| Fonte única | `dataai/brand/tokens.json`, lido por `dataai/theme.py`. Nenhum módulo escreve cor própria. |
 
 ## 13. Requisitos não funcionais
 
@@ -1054,3 +1069,4 @@ O uso de `.rar` nessa conversa foi um meio de fornecer a base de teste, não dec
 | 1.1 | 24/10/2026 | Atualização da referência ao `DatAI_Definicao_MVP.pdf` para a versão 0.2 e esclarecimento do papel de cada artefato. Nenhum requisito de negócio ou decisão pendente foi alterado. |
 | 1.2 | 31/10/2026 | CrewAI e n8n descartados em favor de agentes LLM com código próprio; `ingest-csv` renomeada para `ingest-tabular` (CSV e Excel); criada a RN-015 (resumo da execução), resolvendo P-011; corrigido o caminho da pasta local; adicionada a triagem das pendências para o MVP (16.3). |
 | 1.3 | 31/10/2026 | Métricas abrangentes e orientadas à decisão (RF-022, RN-016, catálogo de 15 famílias em 12.7); tabelas em vários arquivos, partições e descoberta de ligações entre arquivos (RF-023, RF-024, RN-017, RN-018, seção 12.8); origens diferentes com linhagem e reconciliação (RF-025, RN-019); implementação de referência no repositório (12.9); critérios CA-026 a CA-031; novas pendências P-019 e P-020; P-003 e P-016 revistas. |
+| 1.4 | 31/10/2026 | Identidade visual aprovada (RF-012, seção 12.10) e skill `brand-identity`. |

@@ -65,9 +65,10 @@ Limitações e suposições **não** entram no HTML; elas vão para o resumo da 
 
 ## Visual (RN-012)
 
-- Fundo claro e neutro, cartões com borda ou sombra leve, espaçamento consistente (múltiplos de 8 px).
-- Hierarquia por tamanho: KPIs em destaque, títulos de gráfico menores que o título da página.
-- Tipografia legível: corpo ≥ 14 px, rótulos ≥ 12 px.
+- Siga a skill `brand-identity`: cores, fontes (IBM Plex), raios e o símbolo vêm de `dataai.theme`; `build_dashboard` já aplica o tema claro e o escuro (`prefers-color-scheme`), o símbolo no cabeçalho e a linha de origem sob cada gráfico.
+- Cartões com borda de 1 px e sombra leve só no claro, espaçamento na grade de 4 px (16 dentro e entre cartões, 24 entre blocos).
+- Hierarquia por tamanho: indicadores em destaque, títulos de gráfico menores que o título da página.
+- Tipografia legível: corpo 16 px, tabelas e rótulos ≥ 12 px.
 - Evite monotonia: variar tipos de gráfico conforme o dado e usar a paleta categórica quando houver categorias. Não colorir uma série única com várias cores.
 - **Responsivo:** a grade passa de 3 para 2 e para 1 coluna em telas menores. Nada de rolagem horizontal na página.
 

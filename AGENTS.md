@@ -55,6 +55,7 @@ Chamada: `python -m dataai ferramenta <pasta> <nome> '<json>'`. Para JSON grande
 | Planejar | `plan-analysis` | `list_datasets`, `list_metric_functions` |
 | Juntar o que o plano exige | `relate-datasets` | `join_datasets` |
 | Calcular | `describe-data` | `compute_metric`, `get_result` |
+| Identidade visual (antes de gráficos, dashboard e relatório) | `brand-identity` | cores, fontes e símbolo em `dataai/brand/tokens.json` via `dataai.theme` |
 | Gráficos | `design-charts` | `suggest_chart`, `save_chart` |
 | Dashboard | `compose-dashboard` | `build_dashboard`, `inspect_dashboard` |
 | Relatório | `write-analysis-report` | `build_report`, `inspect_report` |

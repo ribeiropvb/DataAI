@@ -6,6 +6,7 @@ import html
 import json
 from pathlib import Path
 
+from .. import theme
 from ..workspace import Workspace, now_iso, sha256_file
 from .charts import ColorMap, echarts_option
 from .fmt import format_value
@@ -15,31 +16,38 @@ from .refs import resolve_path
 ECHARTS_VERSION = "5.5.1"
 ECHARTS_CDN = f"https://cdn.jsdelivr.net/npm/echarts@{ECHARTS_VERSION}/dist/echarts.min.js"
 
-_CSS = """
-:root{--bg:#F8FAFC;--card:#FFFFFF;--ink:#0F172A;--muted:#475569;--line:#E2E8F0;--accent:#2563EB}
-*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{padding:24px 24px 8px;max-width:1360px;margin:0 auto}
-h1{font-size:24px;margin:0 0 4px}.meta{color:var(--muted);font-size:13px}
+_CSS = theme.css_variables() + """
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 """ + theme.FONT_STACK_SANS + """}
+body{-webkit-font-smoothing:antialiased}
+header{padding:24px 24px 8px;max-width:1360px;margin:0 auto;display:flex;gap:12px;align-items:flex-start}
+header .mark{width:40px;height:40px;flex:none;margin-top:2px}header .mark svg{width:100%;height:100%;display:block}
+header .mark .dark{display:none}
+@media (prefers-color-scheme:dark){header .mark .light{display:none}header .mark .dark{display:block}}
+h1{font-size:30px;line-height:36px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px;text-wrap:balance}.meta{color:var(--muted);font-size:14px}
 main{max-width:1360px;margin:0 auto;padding:8px 24px 32px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin:16px 0 24px}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
-.kpi .label{color:var(--muted);font-size:13px}.kpi .value{font-size:28px;font-weight:700;margin-top:4px;letter-spacing:-.01em}
-.kpi .sub{color:var(--muted);font-size:12px;margin-top:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin:16px 0 24px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow)}
+.kpi .label{color:var(--muted);font-size:12px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.kpi .value{font-size:32px;line-height:36px;font-weight:600;margin-top:6px;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.kpi .sub{color:var(--muted);font-size:12px;margin-top:4px}
 nav.tabs{display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:16px}
-nav.tabs button{font:inherit;font-size:14px;background:none;border:0;border-bottom:3px solid transparent;padding:10px 12px;color:var(--muted);cursor:pointer}
+nav.tabs button{font:inherit;font-size:14px;background:none;border:0;border-bottom:3px solid transparent;padding:10px 12px;color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0}
 nav.tabs button[aria-selected=true]{color:var(--ink);border-color:var(--accent);font-weight:600}
+nav.tabs button:focus-visible,th:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .view{display:none}.view.active{display:block}
 .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;grid-auto-flow:dense}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0;box-shadow:var(--shadow)}
 .card.wide{grid-column:span 2}.card.full{grid-column:1/-1}
-.card h3{font-size:15px;margin:0 0 8px}
+.card h3{font-size:16px;line-height:22px;font-weight:500;margin:0 0 8px;text-wrap:balance}
 .chart{width:100%;height:320px}
-table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
-th{cursor:pointer;color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--card)}td.num{text-align:right;font-variant-numeric:tabular-nums}
+.src{margin-top:8px;color:var(--muted);font-size:12px;line-height:16px}
+.src code,footer code{font-family:""" + theme.FONT_STACK_MONO + """;font-size:12px;background:var(--raised);border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+th{cursor:pointer;color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--raised)}td.num{text-align:right;font-variant-numeric:tabular-nums}
 .tablewrap{max-height:420px;overflow:auto}
 footer{max-width:1360px;margin:0 auto;padding:0 24px 24px;color:var(--muted);font-size:12px}
 @media (max-width:1100px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.card.wide{grid-column:1/-1}}
-@media (max-width:700px){.grid{grid-template-columns:1fr}.card.wide,.card.full{grid-column:auto}header,main,footer{padding-left:16px;padding-right:16px}.kpi .value{font-size:24px}.chart{height:280px}}
+@media (max-width:700px){.grid{grid-template-columns:1fr}.card.wide,.card.full{grid-column:auto}header,main,footer{padding-left:16px;padding-right:16px}h1{font-size:24px;line-height:30px}.kpi .value{font-size:26px}.chart{height:280px}}
 """
 
 _JS = r"""
@@ -53,8 +61,27 @@ function F(v,f){ if(v===null||v===undefined||Number.isNaN(v))return '—'; if(ty
   case 'currency_brl_compact':return 'R$ '+compact(v);case 'compact':return compact(v);case 'days':return nf(1).format(v)+' dias';case 'index':return nf(0).format(v);
   default:return nf(Number.isInteger(v)?0:2).format(v);} }
 window.__dataaiFormat = F;
+const DARK = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function themed(opt){
+  if(!DARK) return opt;
+  let s = JSON.stringify(opt);
+  for(const [a,b] of Object.entries(D.palette_dark||{})) s = s.split('"'+a+'"').join('"'+b+'"');
+  return JSON.parse(s);
+}
 function prep(opt){
+  opt = themed(opt);
   const f = opt._fmt; delete opt._fmt;
+  const ink=css('--ink'), muted=css('--muted'), grid=css('--grid-line');
+  opt.textStyle = {fontFamily: getComputedStyle(document.body).fontFamily, color: muted};
+  const axisStyle = (ax) => { if(!ax) return; (Array.isArray(ax)?ax:[ax]).forEach(a => {
+    a.axisLine = Object.assign({lineStyle:{color:grid}}, a.axisLine); a.axisTick = Object.assign({show:false}, a.axisTick);
+    a.splitLine = Object.assign({lineStyle:{color:grid}}, a.splitLine); a.axisLabel = Object.assign({color:muted}, a.axisLabel);
+    a.nameTextStyle = Object.assign({color:muted}, a.nameTextStyle); }); };
+  axisStyle(opt.xAxis); axisStyle(opt.yAxis);
+  (opt.series||[]).forEach(s => { if(s.label && s.label.show) s.label.color = s.type==='heatmap' ? undefined : ink;
+    if(s.type==='bar' && !s.stack) s.itemStyle = Object.assign({borderRadius: s.data && opt.yAxis && opt.yAxis.type==='category' ? [0,4,4,0] : [4,4,0,0]}, s.itemStyle); });
+  if(opt.tooltip) opt.tooltip = Object.assign({backgroundColor: css('--card'), borderColor: css('--line'), textStyle:{color:ink}}, opt.tooltip);
   const C = (x) => x==='currency_brl' ? 'currency_brl_compact' : x;
   const axisFmt = (ax) => { if(!ax) return; (Array.isArray(ax)?ax:[ax]).forEach(a => { a.axisLabel=Object.assign({hideOverlap:true},a.axisLabel); if(a.type==='value'){ const af=a._fmt||f; delete a._fmt; a.axisLabel.formatter=(v)=>F(v, C(af)); } }); };
   axisFmt(opt.xAxis); axisFmt(opt.yAxis);
@@ -93,6 +120,16 @@ window.addEventListener('resize', () => Object.values(charts).forEach(c => c.res
 draw(document);
 })();
 """
+
+
+def _b64(text: str) -> str:
+    import base64
+    return base64.b64encode(text.encode("utf-8")).decode("ascii")
+
+
+def _inline_svg(variant: str) -> str:
+    svg = theme.logo_svg(variant)
+    return svg.replace('role="img" aria-label="DataAI"', 'aria-hidden="true" focusable="false"')
 
 
 class DashboardError(ValueError):
@@ -145,7 +182,8 @@ def build_dashboard(ws: Workspace, config: dict, version: int, inline_library: s
                 h = 260 + 22 * max(0, min(14, len(res.get("rows") or [])) - 8) if spec["type"] == "bar_horizontal" else 320
                 cards.append(f'<section class="card {size}"><h3>{html.escape(spec["title"])}</h3>'
                              f'<div class="chart" style="height:{h}px" data-chart-id="{spec["chart_id"]}" role="img" '
-                             f'aria-label="{html.escape(spec.get("alt_text") or spec["title"])}"></div></section>')
+                             f'aria-label="{html.escape(spec.get("alt_text") or spec["title"])}"></div>'
+                             f'<div class="src">Calculado em <code>{html.escape(spec["result_id"])}</code></div></section>')
             used.append(spec["chart_id"])
         vid = _slug_view(view["name"])
         views_html.append(f'<div class="view{" active" if vi == 0 else ""}" id="view-{vid}"><div class="grid">{"".join(cards)}</div></div>')
@@ -159,8 +197,11 @@ def build_dashboard(ws: Workspace, config: dict, version: int, inline_library: s
         tabs = '<nav class="tabs" role="tablist">' + "".join(
             f'<button role="tab" data-view-tab="{_slug_view(v["name"])}" aria-selected="{"true" if i == 0 else "false"}">{html.escape(v["name"])}</button>'
             for i, v in enumerate(config["views"])) + "</nav>"
+    light, dark = theme.data_palette("claro"), theme.data_palette("escuro")
+    palette_dark = {a: b for key in ("categorical", "sequential", "diverging") for a, b in zip(light[key], dark[key])}
+    palette_dark[light["neutral"]] = dark["neutral"]
     data = {"generated_at": now_iso(), "analysis_id": ws.manifest["analysis_id"], "kpis": kpis, "charts": charts_data,
-            "library": f"echarts@{ECHARTS_VERSION}"}
+            "library": f"echarts@{ECHARTS_VERSION}", "palette_dark": palette_dark}
     import os
     inline_library = inline_library or os.environ.get("DATAAI_ECHARTS_JS")  # modo offline: biblioteca embutida
     lib = (f"<script>{Path(inline_library).read_text(encoding='utf-8')}</script>" if inline_library
@@ -170,10 +211,14 @@ def build_dashboard(ws: Workspace, config: dict, version: int, inline_library: s
     sources = ", ".join(sorted({f["original_name"] for f in ws.manifest["files"]}))
     doc = f"""<!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{html.escape(config["title"])}</title><style>{_CSS}</style></head>
-<body><header><h1>{html.escape(config["title"])}</h1><div class="meta">{html.escape(config.get("subtitle", ""))}</div></header>
+<title>{html.escape(config["title"])}</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,{_b64(theme.logo_svg("claro"))}">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="{theme.GOOGLE_FONTS_URL}">
+<style>{_CSS}</style></head>
+<body><header><div class="mark" aria-hidden="true"><span class="light">{_inline_svg("claro")}</span><span class="dark">{_inline_svg("escuro")}</span></div>
+<div><h1>{html.escape(config["title"])}</h1><div class="meta">{html.escape(config.get("subtitle", ""))}</div></div></header>
 <main><div class="kpis">{kpi_html}</div>{tabs}{"".join(views_html)}</main>
-<footer>Gerado em {html.escape(data["generated_at"][:10])} · Fonte: {html.escape(sources)}</footer>
+<footer>Gerado pelo DataAI em {html.escape(data["generated_at"][:10])} · Fonte: {html.escape(sources)}</footer>
 <script type="application/json" id="dataai-data">{json.dumps(data, ensure_ascii=False, default=str).replace("</", "<\\/")}</script>
 {lib}<script>{_JS}</script></body></html>"""
     path = ws.deliverable_dir(version) / "dashboard.html"

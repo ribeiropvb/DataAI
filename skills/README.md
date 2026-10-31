@@ -2,7 +2,7 @@
 
 Este diretório contém as skills usadas pelos agentes do DataAI. Cada skill é uma pasta com um `SKILL.md`, no padrão [Agent Skills](https://agentskills.io/home): um cabeçalho YAML com `name` e `description`, seguido das instruções.
 
-As skills foram escritas do zero a partir do [`specs.md`](../specs.md) e atualizadas para a versão 1.3. Os identificadores RF, RN, CA e P citados nelas apontam para essa especificação. Cada `SKILL.md` tem uma seção **Ferramentas** com as funções do pacote `dataai` que executam a parte determinística; o agente decide, as ferramentas calculam.
+As skills foram escritas do zero a partir do [`specs.md`](../specs.md) e atualizadas para a versão 1.4. Os identificadores RF, RN, CA e P citados nelas apontam para essa especificação. Cada `SKILL.md` tem uma seção **Ferramentas** com as funções do pacote `dataai` que executam a parte determinística; o agente decide, as ferramentas calculam.
 
 ## Catálogo
 
@@ -18,6 +18,7 @@ As skills foram escritas do zero a partir do [`specs.md`](../specs.md) e atualiz
 | [`write-analysis-report`](write-analysis-report/SKILL.md) | report-writer | Produz o relatório PDF com interpretação e storytelling. |
 | [`validate-analysis`](validate-analysis/SKILL.md) | technical-reviewer | Audita números, relações e consistência entre resultados e entregas. |
 | [`orchestrate-quality-review`](orchestrate-quality-review/SKILL.md) | quality-orchestrator | Revisa as entregas finais, encaminha correções, confere e decide a liberação. |
+| [`brand-identity`](brand-identity/SKILL.md) | visualization-specialist, interface-designer, report-writer, quality-orchestrator | Guarda a identidade visual aprovada (cores, tipografia, símbolo) e as regras para aplicá-la. |
 
 Um mesmo agente pode usar mais de uma skill. Os agentes são baseados em LLM e coordenados pelo código da aplicação, sem CrewAI e sem n8n.
 

@@ -11,14 +11,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .. import theme
+from ..theme import CATEGORICAL, DIVERGING, NEUTRAL, PRIMARY, SEQUENTIAL
 from .fmt import format_value, guess_format
 
-PRIMARY = "#2563EB"
-CATEGORICAL = ["#2563EB", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6", "#06B6D4", "#EC4899", "#84CC16"]
-SEQUENTIAL = ["#DBEAFE", "#93C5FD", "#3B82F6", "#1D4ED8", "#1E3A8A"]
-DIVERGING = ["#DC2626", "#F3F4F6", "#2563EB"]
-NEUTRAL = "#9CA3AF"
-POSITIVE, NEGATIVE = "#10B981", "#EF4444"
+# Cores da identidade visual (dataai/brand/tokens.json, skill brand-identity). Variação positiva e
+# negativa usam os lados da escala divergente: nenhuma cor diz se o valor é bom ou ruim.
+POSITIVE, NEGATIVE = theme.INCREASE, theme.DECREASE
+SECONDARY = CATEGORICAL[1]
+INK, MUTED, GRID = theme.INK, theme.INK_MUTED, theme.GRID
 CHART_TYPES = ("kpi", "bar_horizontal", "column", "line", "histogram", "heatmap", "pareto", "waterfall", "table")
 
 
@@ -151,8 +152,9 @@ def render_png(spec: dict, result: dict, path: str | Path, colors: ColorMap | No
     t = spec["type"]
     x, y = spec.get("x") or {}, spec.get("y") or {}
     plt.rcParams.update({"font.size": 9, "axes.spines.top": False, "axes.spines.right": False,
-                         "axes.edgecolor": "#D1D5DB", "axes.labelcolor": "#374151", "xtick.color": "#4B5563",
-                         "ytick.color": "#4B5563", "font.family": "DejaVu Sans"})
+                         "axes.edgecolor": GRID, "axes.labelcolor": MUTED, "xtick.color": MUTED,
+                         "ytick.color": MUTED, "font.family": [theme.matplotlib_font(), "DejaVu Sans"], "text.color": INK,
+                         "axes.titlecolor": INK})
     fig_h = 3.2
     if t == "bar_horizontal":
         fig_h = max(2.4, min(7.5, 0.32 * len(rows) + 1.0))
@@ -164,6 +166,8 @@ def render_png(spec: dict, result: dict, path: str | Path, colors: ColorMap | No
         labels = [str(r[y["field"]]) for r in rows][::-1]
         vals = [r.get(x["field"]) or 0 for r in rows][::-1]
         if spec.get("color", {}).get("mode") == "by_category":
+            for l in labels[::-1]:  # atribui na ordem de leitura (maior primeiro): dados-1 vai para o primeiro item
+                colors.get(l)
             cs = [colors.get(l) for l in labels]
         else:
             cs = [NEUTRAL if l == "Outros" else spec.get("color", {}).get("value", PRIMARY) for l in labels]
@@ -171,9 +175,9 @@ def render_png(spec: dict, result: dict, path: str | Path, colors: ColorMap | No
         ax.xaxis.set_major_formatter(fmt_axis(x.get("format")))
         for b, v in zip(bars, vals):
             ax.text(b.get_width(), b.get_y() + b.get_height() / 2, " " + format_value(v, x.get("format")),
-                    va="center", fontsize=7.5, color="#111827")
+                    va="center", fontsize=7.5, color=INK)
         if spec.get("reference_line") is not None:
-            ax.axvline(spec["reference_line"], color="#6B7280", lw=1, ls="--")
+            ax.axvline(spec["reference_line"], color=MUTED, lw=1, ls="--")
         ax.set_xlabel(x.get("label", ""))
         ax.margins(x=0.15)
     elif t == "column":
@@ -188,14 +192,14 @@ def render_png(spec: dict, result: dict, path: str | Path, colors: ColorMap | No
         ax.plot(labels, vals, color=PRIMARY, lw=2, marker="o", ms=3)
         partial = [i for i, r in enumerate(rows) if r.get("partial_period")]
         for i in partial:
-            ax.plot([labels[i]], [vals[i]], marker="o", ms=6, mfc="white", mec=PRIMARY)
+            ax.plot([labels[i]], [vals[i]], marker="o", ms=6, mfc="white", mec=theme.WARNING, mew=1.5)
         ax.yaxis.set_major_formatter(fmt_axis(y.get("format")))
         ax.set_ylabel(y.get("label", ""))
         step = max(1, len(labels) // 12)
         ax.set_xticks(range(0, len(labels), step))
         ax.set_xticklabels(labels[::step], rotation=45, ha="right")
         if partial:
-            ax.text(0.99, 0.02, "○ período parcial", transform=ax.transAxes, ha="right", fontsize=7, color="#6B7280")
+            ax.text(0.99, 0.02, "○ período parcial", transform=ax.transAxes, ha="right", fontsize=7, color=theme.WARNING)
     elif t == "histogram":
         starts = [r["bin_start"] for r in rows]
         widths = [r["bin_end"] - r["bin_start"] for r in rows]
@@ -209,7 +213,7 @@ def render_png(spec: dict, result: dict, path: str | Path, colors: ColorMap | No
         ax.bar(labels, vals, color=PRIMARY)
         ax.yaxis.set_major_formatter(fmt_axis(y.get("format")))
         ax2 = ax.twinx()
-        ax2.plot(labels, [r.get(y.get("line_field", "cum_share")) for r in rows][:20], color="#F59E0B", marker="o", ms=3)
+        ax2.plot(labels, [r.get(y.get("line_field", "cum_share")) for r in rows][:20], color=SECONDARY, marker="o", ms=3)
         ax2.yaxis.set_major_formatter(fmt_axis("percent_0"))
         ax2.set_ylim(0, 1.05)
         ax2.spines["top"].set_visible(False)
@@ -223,7 +227,7 @@ def render_png(spec: dict, result: dict, path: str | Path, colors: ColorMap | No
             bottoms.append(cum if v >= 0 else cum + v)
             cum += v
         ax.bar(labels, [abs(v) for v in vals], bottom=bottoms, color=[POSITIVE if v >= 0 else NEGATIVE for v in vals])
-        ax.axhline(0, color="#9CA3AF", lw=0.8)
+        ax.axhline(0, color=MUTED, lw=0.8)
         ax.yaxis.set_major_formatter(fmt_axis(y.get("format")))
         ax.set_xticks(range(len(labels)))
         ax.set_xticklabels(labels, rotation=45, ha="right")
@@ -246,7 +250,7 @@ def render_png(spec: dict, result: dict, path: str | Path, colors: ColorMap | No
                 for j in range(len(xs)):
                     if not np.isnan(m[i, j]):
                         ax.text(j, i, format_value(m[i, j], spec["value"].get("format")), ha="center", va="center",
-                                fontsize=6.5, color="white" if m[i, j] > np.nanmean(m) else "#111827")
+                                fontsize=6.5, color="white" if m[i, j] > np.nanmean(m) else INK)
         fig.colorbar(im, ax=ax, fraction=0.03)
         ax.spines[:].set_visible(False)
     elif t == "table":
@@ -259,7 +263,10 @@ def render_png(spec: dict, result: dict, path: str | Path, colors: ColorMap | No
     else:
         plt.close(fig)
         raise ValueError(f"tipo sem renderização PNG: {t}")
-    ax.set_title(spec["title"], loc="left", fontsize=10.5, color="#111827", fontweight="bold", pad=10)
+    ax.set_title(spec["title"], loc="left", fontsize=10.5, color=INK, fontweight=600, pad=10)
+    if t not in ("heatmap", "table"):
+        ax.grid(axis="x" if t == "bar_horizontal" else "y", color=GRID, lw=0.6)
+        ax.set_axisbelow(True)
     fig.tight_layout()
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=dpi)
@@ -281,6 +288,9 @@ def echarts_option(spec: dict, result: dict, colors: ColorMap | None = None) -> 
     if t == "bar_horizontal":
         rows_r = rows[::-1]
         cats = [str(r[y["field"]]) for r in rows_r]
+        if spec.get("color", {}).get("mode") == "by_category":
+            for c in cats[::-1]:  # atribui na ordem de leitura (maior primeiro)
+                colors.get(c)
         data = []
         for r, c in zip(rows_r, cats):
             col = colors.get(c) if spec.get("color", {}).get("mode") == "by_category" else (NEUTRAL if c == "Outros" else PRIMARY)
@@ -288,7 +298,7 @@ def echarts_option(spec: dict, result: dict, colors: ColorMap | None = None) -> 
         opt = {**base, "_fmt": x.get("format"), "grid": {**base["grid"], "right": 72}, "xAxis": {"type": "value", "splitNumber": 4},
                "yAxis": {"type": "category", "data": cats}, "series": [{"type": "bar", "data": data, "label": {"show": True, "position": "right"}}]}
         if spec.get("reference_line") is not None:
-            opt["series"][0]["markLine"] = {"symbol": "none", "data": [{"xAxis": spec["reference_line"]}], "lineStyle": {"color": "#6B7280"}}
+            opt["series"][0]["markLine"] = {"symbol": "none", "data": [{"xAxis": spec["reference_line"]}], "lineStyle": {"color": MUTED}}
         return opt
     if t in ("column", "line"):
         cats = [str(r[x["field"]]) for r in rows]
@@ -311,7 +321,7 @@ def echarts_option(spec: dict, result: dict, colors: ColorMap | None = None) -> 
                 "yAxis": [{"type": "value"}, {"type": "value", "max": 1, "_fmt": "percent_0"}],
                 "series": [{"type": "bar", "data": [r.get(y["field"]) for r in rows20], "itemStyle": {"color": PRIMARY}},
                            {"type": "line", "yAxisIndex": 1, "_fmt": "percent_1",
-                            "data": [r.get(y.get("line_field", "cum_share")) for r in rows20], "itemStyle": {"color": "#F59E0B"}}]}
+                            "data": [r.get(y.get("line_field", "cum_share")) for r in rows20], "itemStyle": {"color": SECONDARY}}]}
     if t == "waterfall":
         rows12 = rows[:12]
         cum, base_vals, vals = 0.0, [], []

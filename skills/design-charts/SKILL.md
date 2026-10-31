@@ -42,18 +42,21 @@ Mais de 12 categorias: mostre as principais e agrupe o resto em "Outros", regist
 
 ## Cores
 
-Paleta neutra padrão do MVP (não há paleta de marca definida):
+As cores vêm da identidade visual aprovada: leia a skill `brand-identity` antes de escolher cores. Os valores ficam em `dataai/brand/tokens.json` e o código os lê por `dataai.theme`; não escreva hexadecimais próprios.
 
-| Função | Cor |
+| Função | Token (tema claro) |
 |---|---|
-| Série principal | `#2563EB` |
-| Categóricas (em ordem) | `#2563EB`, `#F59E0B`, `#10B981`, `#EF4444`, `#8B5CF6`, `#06B6D4`, `#EC4899`, `#84CC16` |
-| Sequencial | de `#DBEAFE` a `#1E3A8A` |
-| Divergente | `#DC2626` → `#F3F4F6` → `#2563EB` |
-| Neutra (eixos, "Outros") | `#9CA3AF` |
+| Série principal / série única | `dados-1` (`#067689`, petróleo) |
+| Categóricas (em ordem) | `dados-1` a `dados-8`: petróleo `#067689`, ocre `#AA8A09`, vinho `#AE2749`, azul `#3786C3`, ameixa `#6A3860`, laranja `#CB5A1A`, violeta `#7553BD`, verde `#2D8949` |
+| Sequencial | `dados-seq-1` a `-5`, de `#CBEFF9` a `#024552` |
+| Divergente (e variação positiva/negativa) | `dados-div-1` a `-5`: `#993E03` → `#DFE6E9` → `#016071` |
+| "Outros" | `dados-outros` (`#79858A`) |
+| Grade e eixos | `dados-grade` |
 
 Regras (RN-012):
-- **A mesma categoria tem a mesma cor em todos os gráficos** da análise. Registre o mapa em `color_map`.
+- **A mesma categoria tem a mesma cor em todos os gráficos** da análise. Registre o mapa em `color_map`. A cor é atribuída na ordem de leitura: o primeiro item exibido recebe `dados-1`.
+- Até 6 categorias com legenda; 7ª e 8ª só com rótulo direto; acima de 8, agrupe em "Outros".
+- **Nenhuma cor julga o valor** (nada de verde "bom" e vermelho "ruim"). Variação positiva e negativa usam os lados da escala divergente.
 - Uma única série usa uma única cor. Não multicolorir barras de uma série sem motivo.
 - Cor nunca é a única forma de distinguir: use rótulos ou legendas.
 - Contraste mínimo de 4,5:1 para textos sobre o fundo.
@@ -76,7 +79,7 @@ Regras (RN-012):
   "title": "Taxa de evasão no 1º ano por curso",
   "x": { "field": "taxa", "label": "Evasão (%)", "format": "percent_1" },
   "y": { "field": "curso", "label": "Curso", "sort": "desc_by_x" },
-  "color": { "mode": "single", "value": "#2563EB" },
+  "color": { "mode": "single", "value": "#067689" },
   "annotations": [ { "type": "flag", "field": "small_sample", "label": "amostra < 30" } ],
   "targets": ["report", "dashboard"],
   "interactions": ["tooltip"],
@@ -91,7 +94,7 @@ Regras (RN-012):
 ```json
 {
   "charts": [ { "chart_id": "ch_evasao_curso", "path": "charts/ch_evasao_curso.json", "targets": ["report", "dashboard"] } ],
-  "color_map": { "Engenharia": "#2563EB", "Direito": "#F59E0B" }
+  "color_map": { "Engenharia": "#067689", "Direito": "#AA8A09" }
 }
 ```
 

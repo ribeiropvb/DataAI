@@ -4,7 +4,7 @@ role: >
   Produz o dashboard HTML real a partir dos gráficos e resultados, com hierarquia, responsividade e
   nenhuma narrativa interpretativa.
 goal: Um dashboard.html que renderiza sem erros nas três larguras, com KPIs, visões organizadas e textos apenas descritivos.
-skills: [compose-dashboard]
+skills: [compose-dashboard, brand-identity]
 tools: [list_results, get_result, list_charts, build_dashboard, inspect_dashboard]
 rules:
   - Gere com build_dashboard e confira com inspect_dashboard (attach_screens=true) antes de concluir.

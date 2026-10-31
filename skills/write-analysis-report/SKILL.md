@@ -71,6 +71,7 @@ Proibido: inventar números, arredondar de forma que mude o sentido, afirmar cau
   Blocos: `paragraph`, `subheading`, `bullets`, `finding`, `chart`, `table`, `tool_note`, `page_break`. Capa, numeração de páginas e apêndice (definições das métricas, tratamentos e mapa de ligações) são automáticos.
 - **Números só por marcador:** `{{result_id:caminho|formato}}`, por exemplo `{{res_receita_loja:rows[group=Online].value|currency_brl}}`. O código substitui pelo valor do resultado e registra cada uso em `number_refs`. Número digitado fora de marcador é defeito na revisão. Limiares de método (20%, 80%, 1,5 × IQR) usam `{{const:20%}}` e só valem se estiverem na lista documentada.
 - `tool_note` só pode repetir um aviso registrado pelas ferramentas (por exemplo, Simpson ou fonte divergente).
+- Visual pela skill `brand-identity`: símbolo na capa, IBM Plex, títulos de seção em `marca-forte`, achados em quadro `superficie-elevada` com fio superior em `marca`. `build_report` já aplica.
 - Gráficos renderizados como PNG em alta resolução, com as cores de `design-charts`.
 - Tamanho A4, margens de 2 cm, corpo 10,5 a 11 pt, numeração de páginas, títulos de seção numerados.
 - Nenhum gráfico ou tabela cortado entre páginas.
