@@ -4,7 +4,7 @@ Análise de dados com agentes de IA para quem não programa.
 
 Você envia um ou mais arquivos CSV ou Excel, faz uma pergunta sobre eles (ou pede uma exploração geral) e recebe um **relatório PDF** com a interpretação dos resultados, um **dashboard HTML** com as visualizações, ou os dois. Os números são calculados por ferramentas de verdade, nunca estimados pelo modelo, e toda entrega passa por uma revisão de qualidade antes de ser liberada.
 
-> **Situação:** em especificação. Ainda não há código implementado. A especificação completa está em [`specs.md`](specs.md) (versão 1.2).
+> **Situação:** em especificação. As skills já estão escritas; o código da aplicação ainda não. A especificação completa está em [`specs.md`](specs.md) (versão 1.2).
 
 ## Para quem é
 
@@ -38,7 +38,7 @@ O produto é multidomínio: funciona com dados de qualquer tema (vendas, educaç
 - Ferramentas usadas pelos agentes: cálculo (pandas), geração de PDF e HTML, e navegador headless para a revisão visual.
 - No MVP: execução local, um usuário, uma análise por vez, histórico em uma pasta por análise com manifesto JSON.
 
-### Skills previstas
+### Skills
 
 | Skill | Responsabilidade |
 |---|---|
@@ -68,3 +68,4 @@ O produto é multidomínio: funciona com dados de qualquer tema (vendas, educaç
 ## Documentação
 
 - [`specs.md`](specs.md): especificação consolidada, com requisitos (RF), regras de negócio (RN), critérios de aceite (CA) e pendências (P).
+- [`skills/`](skills/README.md): as 10 skills dos agentes, com o contrato de saída comum e o fluxo entre elas.
