@@ -47,6 +47,8 @@ python -m dataai catalogo                             # funções de métrica M1
 
 Chamada: `python -m dataai ferramenta <pasta> <nome> '<json>'`. Para JSON grande, grave num arquivo e passe `@arquivo.json`. Um erro volta como `{"error": ...}`; corrija e chame de novo.
 
+> **Atalho:** para montar o relatório, o dashboard ou os dois, siga `skills/build-report/SKILL.md` ou `skills/build-dashboard/SKILL.md`. Elas encadeiam os passos abaixo, do `preparar` ao `revisar`.
+
 ### 3. Seguir as skills, nesta ordem
 
 | Etapa | Skill | Ferramentas principais |
