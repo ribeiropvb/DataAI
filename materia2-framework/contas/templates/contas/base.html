@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}DataAI{% endblock %}</title>
+  <style>
+    :root { --fundo:#f4f6f8; --cartao:#fff; --texto:#1d2733; --suave:#5b6775; --destaque:#1f6feb; --erro:#c62828; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--fundo); color:var(--texto); }
+    header { display:flex; justify-content:space-between; align-items:center; padding:12px 24px; background:var(--cartao); border-bottom:1px solid #dde3ea; }
+    header strong { font-size:1.1rem; }
+    main { max-width:960px; margin:40px auto; padding:0 16px; }
+    .cartao { background:var(--cartao); border-radius:10px; padding:28px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+    .login { max-width:380px; margin:80px auto; }
+    label { display:block; margin:14px 0 6px; font-weight:600; }
+    input[type=text], input[type=password] { width:100%; padding:10px; border:1px solid #c5ced8; border-radius:6px; font-size:1rem; }
+    button { margin-top:20px; width:100%; padding:11px; border:0; border-radius:6px; background:var(--destaque); color:#fff; font-size:1rem; cursor:pointer; }
+    header button { width:auto; margin:0 0 0 10px; padding:7px 14px; }
+    .erro { color:var(--erro); margin-top:10px; }
+    .suave { color:var(--suave); }
+  </style>
+</head>
+<body>
+  {% if user.is_authenticated %}
+  <header>
+    <strong>DataAI</strong>
+    <form method="post" action="{% url 'contas:logout' %}">
+      {% csrf_token %}
+      <span class="suave">{{ user }}</span>
+      <button type="submit">Sair</button>
+    </form>
+  </header>
+  {% endif %}
+  <main>{% block content %}{% endblock %}</main>
+</body>
+</html>

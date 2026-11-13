@@ -1,0 +1,9 @@
+{% extends 'contas/base.html' %}
+{% block title %}Início · DataAI{% endblock %}
+{% block content %}
+<div class="cartao">
+  <h1>Olá, {{ user.first_name|default:user.username }}!</h1>
+  <p>Bem-vindo ao DataAI. Esta é a página inicial do site da matéria Framework.</p>
+  <p class="suave">As próximas funcionalidades serão adicionadas aqui aos poucos.</p>
+</div>
+{% endblock %}
