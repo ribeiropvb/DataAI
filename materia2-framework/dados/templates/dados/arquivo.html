@@ -1,0 +1,62 @@
+{% extends 'contas/base.html' %}
+{% block title %}{{ arquivo.nome_original }} · DataAI{% endblock %}
+{% block content %}
+{% with dono=arquivo.dono %}
+<section class="cabecalho-pagina">
+  <div>
+    {% include 'dados/_caminho.html' with depois=True %}
+    <h1 class="titulo-2 com-voltar quebra">{{ arquivo.nome_original }}</h1>
+    <p class="suave corpo-p meta">
+      <span class="selo codigo">{{ arquivo.extensao }}</span>
+      <span>{{ arquivo.tamanho|filesizeformat }}</span>
+      <span>{{ arquivo.total_linhas }} linhas</span>
+      <span>Enviado em {{ arquivo.enviado_em|date:"d/m/Y H:i" }}</span>
+      {% if dono != user %}<span>por {{ dono.get_full_name|default:dono.username }}</span>{% endif %}
+    </p>
+  </div>
+  <a class="botao" href="{% url 'dados:baixar' arquivo.pk %}">{% include 'dados/_icones.html' with icone='baixar' %} Baixar</a>
+</section>
+{% endwith %}
+
+{% if pode_editar %}
+<section class="cartao barra-arquivo">
+  <form method="post" action="{% url 'dados:mover' arquivo.pk %}" class="campo-com-botao">
+    {% csrf_token %}
+    <label for="{{ form_mover.destino.id_for_label }}" class="corpo-p">{{ form_mover.destino.label }}</label>
+    {{ form_mover.destino }}
+    <button type="submit" class="botao botao-secundario">Mover</button>
+  </form>
+  <form method="post" action="{% url 'dados:excluir_arquivo' arquivo.pk %}" onsubmit="return confirm('Excluir o arquivo &quot;{{ arquivo.nome_original|escapejs }}&quot;? Isso não pode ser desfeito.');">
+    {% csrf_token %}
+    <button type="submit" class="botao botao-perigo">Excluir arquivo</button>
+  </form>
+</section>
+{% endif %}
+
+<section class="cartao previa">
+  <h2 class="secao-titulo">Pré-visualização</h2>
+  {% if arquivo.abas|length > 1 %}
+  <nav class="abas" aria-label="Abas da planilha">
+    {% for a in arquivo.abas %}
+    <a href="?aba={{ forloop.counter0 }}"{% if forloop.counter0 == indice_aba %} aria-current="page"{% endif %}>{{ a.nome }} <span class="suave">{{ a.linhas }}</span></a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+  {% if aba %}
+  <p class="corpo-p suave">{{ aba.colunas|length }} colunas · {{ aba.linhas }} linhas.</p>
+  <div class="tabela-rolagem">
+    <table class="tabela tabela-dados">
+      <thead><tr><th scope="col" class="num">#</th>{% for c in aba.colunas %}<th scope="col">{{ c }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for linha in aba.amostra %}
+        <tr><td class="num suave">{{ forloop.counter }}</td>{% for v in linha %}<td>{{ v }}</td>{% endfor %}</tr>
+        {% empty %}
+        <tr><td colspan="{{ aba.colunas|length|add:1 }}" class="suave">A aba não tem linhas de dados, só o cabeçalho.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="legenda">Primeiras {{ aba.amostra|length }} de {{ aba.linhas }} linhas · Fonte: <span class="codigo">{{ arquivo.nome_original }}{% if arquivo.extensao != 'csv' %} / {{ aba.nome }}{% endif %}</span></p>
+  {% endif %}
+</section>
+{% endblock %}

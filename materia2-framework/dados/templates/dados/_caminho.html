@@ -1,0 +1,11 @@
+<nav class="caminho corpo-p" aria-label="Caminho">
+  {% if dono == user %}
+  <a href="{% url 'dados:inicio' %}">Meus arquivos</a>
+  {% else %}
+  <a href="{% url 'dados:inicio' %}?usuario={{ dono.pk }}">Arquivos de {{ dono.get_full_name|default:dono.username }}</a>
+  {% endif %}
+  {% for p in caminho %}
+  <span aria-hidden="true">/</span>
+  {% if forloop.last and not depois %}<span aria-current="page">{{ p.nome }}</span>{% else %}<a href="{% url 'dados:pasta' p.pk %}">{{ p.nome }}</a>{% endif %}
+  {% endfor %}
+</nav>

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'contas',
+    'dados',
 ]
 
 MIDDLEWARE = [
@@ -133,3 +134,9 @@ AUTH_USER_MODEL = 'contas.Usuario'
 LOGIN_URL = 'contas:login'
 LOGIN_REDIRECT_URL = 'contas:home'
 LOGOUT_REDIRECT_URL = 'contas:login'
+
+# Arquivos enviados: ficam no disco em media/uploads/<id do usuário>/ e
+# não são servidos por URL pública; o download passa por dados.views.baixar,
+# que confere o dono. Só o caminho fica no SQLite.
+MEDIA_ROOT = BASE_DIR / 'media'
+DADOS_TAMANHO_MAXIMO = 20 * 1024 * 1024  # 20 MB por arquivo
