@@ -1,0 +1,45 @@
+{% extends 'contas/base.html' %}
+{% block title %}Usuários · DataAI{% endblock %}
+{% block content %}
+<section class="cabecalho-pagina">
+  <div>
+    <h1 class="titulo-2">Usuários</h1>
+    <p class="suave">Quem pode acessar o DataAI.</p>
+  </div>
+  <a class="botao" href="{% url 'contas:novo_usuario' %}">+ Novo usuário</a>
+</section>
+
+<div class="cartao tabela-envoltorio">
+  <table class="tabela">
+    <thead>
+      <tr>
+        <th scope="col">Nome</th>
+        <th scope="col">Usuário</th>
+        <th scope="col">E-mail</th>
+        <th scope="col">Perfil</th>
+        <th scope="col">Acesso</th>
+        <th scope="col"><span class="sr">Ações</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in usuarios %}
+      <tr{% if not u.is_active %} class="inativo"{% endif %}>
+        <td>{{ u.get_full_name|default:"—" }}</td>
+        <td class="codigo">{{ u.username }}</td>
+        <td>{{ u.email|default:"—" }}</td>
+        <td>{% if u.is_superuser %}<span class="selo">Root</span>{% elif u.is_staff %}<span class="selo">Administrador</span>{% else %}<span class="suave">Usuário</span>{% endif %}</td>
+        <td>{% if u.is_active %}<span class="estado estado-ok"><span aria-hidden="true">●</span> Ativo</span>{% else %}<span class="estado"><span aria-hidden="true">○</span> Bloqueado</span>{% endif %}</td>
+        <td class="acoes">
+          {% if u != user %}{% if user.is_superuser or not u.is_staff and not u.is_superuser %}
+          <form method="post" action="{% url 'contas:alternar_acesso' u.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="botao botao-secundario">{% if u.is_active %}Bloquear{% else %}Reativar{% endif %}</button>
+          </form>
+          {% endif %}{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

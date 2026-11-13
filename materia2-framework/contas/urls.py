@@ -16,4 +16,7 @@ urlpatterns = [
         name='login',
     ),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('usuarios/', views.usuarios, name='usuarios'),
+    path('usuarios/novo/', views.novo_usuario, name='novo_usuario'),
+    path('usuarios/<int:pk>/acesso/', views.alternar_acesso, name='alternar_acesso'),
 ]

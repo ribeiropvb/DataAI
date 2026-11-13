@@ -16,6 +16,12 @@
       <span>DataAI</span>
     </a>
     {% if user.is_authenticated %}
+    <nav class="menu" aria-label="Principal">
+      <a href="{% url 'contas:home' %}"{% if request.resolver_match.url_name == 'home' %} aria-current="page"{% endif %}>Início</a>
+      {% if user.is_staff or user.is_superuser %}
+      <a href="{% url 'contas:usuarios' %}"{% if request.resolver_match.url_name in 'usuarios novo_usuario' %} aria-current="page"{% endif %}>Usuários</a>
+      {% endif %}
+    </nav>
     <form method="post" action="{% url 'contas:logout' %}">
       {% csrf_token %}
       <span class="usuario corpo-p suave">{{ user }}</span>
@@ -23,7 +29,15 @@
     </form>
     {% endif %}
   </header>
-  <main class="conteudo">{% block content %}{% endblock %}</main>
+  <main class="conteudo">
+    {% for m in messages %}
+    <div class="aviso {% if m.level_tag == 'error' %}aviso-erro{% else %}aviso-sucesso{% endif %}" role="status">
+      <span aria-hidden="true">{% if m.level_tag == 'error' %}✕{% else %}✓{% endif %}</span>
+      <span><strong>{% if m.level_tag == 'error' %}Erro:{% else %}Feito:{% endif %}</strong> {{ m }}</span>
+    </div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
   {% endblock %}
 </body>
 </html>

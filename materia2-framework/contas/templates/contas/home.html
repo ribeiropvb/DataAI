@@ -17,6 +17,13 @@
     <h2>Minhas análises</h2>
     <p class="corpo-p suave">Relatórios e dashboards gerados, com o resumo de cada execução.</p>
   </article>
+  {% if user.is_staff or user.is_superuser %}
+  <a class="cartao recurso recurso-link" href="{% url 'contas:usuarios' %}">
+    <span class="selo selo-marca">Administração</span>
+    <h2>Usuários</h2>
+    <p class="corpo-p suave">Cadastre pessoas e bloqueie ou reative o acesso.</p>
+  </a>
+  {% endif %}
   <article class="cartao recurso">
     <span class="selo">Em breve</span>
     <h2>Conta</h2>

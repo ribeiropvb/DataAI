@@ -21,6 +21,8 @@
   --marca-forte: #8CCDDD;
   --sobre-marca: #001F26;
   --foco: #8CCDDD;
+  --sucesso: #8CCDDD;
+  --sucesso-fundo: #013741;
   --erro: #F98F87;
   --erro-fundo: #4B1D1B;
   --info: #9AC0F8;
@@ -180,7 +182,84 @@ a { color: var(--marca); }
 .aviso-erro { background: var(--erro-fundo); color: var(--erro); }
 .aviso-info { background: var(--info-fundo); color: var(--info); }
 
+.aviso-sucesso { background: var(--sucesso-fundo); color: var(--sucesso); }
+.conteudo > .aviso { margin-top: 0; }
+
+/* Menu do topo */
+.topo .marca { margin-right: auto; }
+.menu { display: flex; gap: var(--espaco-1); }
+.menu a {
+  padding: 6px var(--espaco-3);
+  border-radius: var(--raio-m);
+  color: var(--tinta-suave);
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+.menu a:hover { color: var(--tinta); background: var(--superficie-elevada); }
+.menu a[aria-current="page"] { color: var(--marca); background: var(--superficie-elevada); }
+
+/* Cartão clicável e selo da marca */
+.recurso-link { text-decoration: none; color: var(--tinta); display: block; }
+.recurso-link:hover { border-color: var(--marca); }
+.selo-marca { color: var(--marca); border-color: var(--marca); background: transparent; }
+
+/* Cabeçalho de página */
+.cabecalho-pagina { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--espaco-4); flex-wrap: wrap; }
+.cabecalho-pagina p { margin: var(--espaco-2) 0 0; }
+.com-voltar { margin-top: var(--espaco-2); }
+.conteudo section > p { margin: var(--espaco-2) 0 0; }
+
+/* Tabela */
+.tabela-envoltorio { padding: 0; overflow-x: auto; position: relative; }
+.tabela { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 20px; }
+.tabela th {
+  text-align: left;
+  padding: var(--espaco-3) var(--espaco-4);
+  background: var(--superficie-elevada);
+  color: var(--tinta-suave);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tabela td { padding: var(--espaco-3) var(--espaco-4); border-top: 1px solid var(--linha); vertical-align: middle; }
+.tabela tr.inativo td { color: var(--tinta-suave); }
+.tabela .acoes { text-align: right; white-space: nowrap; }
+.tabela .acoes form { margin: 0; }
+.estado { white-space: nowrap; color: var(--tinta-suave); }
+.estado-ok { color: var(--sucesso); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* Formulário de cadastro */
+.formulario { max-width: 720px; }
+.campos-duplos { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--espaco-4); }
+.campos-duplos .campo + .campo { margin-top: 0; }
+.campo input[type=email] {
+  width: 100%;
+  padding: 10px var(--espaco-3);
+  background: var(--fundo);
+  color: var(--tinta);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio-m);
+  font: inherit;
+}
+.campo input[type=email]:focus { outline: 2px solid var(--foco); outline-offset: 0; border-color: transparent; }
+.com-erro input { border-color: var(--erro); }
+.erro-campo { margin: var(--espaco-1) 0 0; color: var(--erro); font-size: 12px; line-height: 16px; }
+.ajuda { margin: var(--espaco-1) 0 0; color: var(--tinta-suave); font-size: 12px; line-height: 16px; }
+.formulario > .ajuda { margin-top: var(--espaco-4); }
+.caixa { display: flex; gap: var(--espaco-3); align-items: flex-start; margin-top: var(--espaco-6); padding: var(--espaco-3); border: 1px solid var(--linha); border-radius: var(--raio-m); cursor: pointer; }
+.caixa input { margin-top: 4px; width: 16px; height: 16px; accent-color: var(--marca); }
+.botoes { display: flex; justify-content: flex-end; gap: var(--espaco-3); margin-top: var(--espaco-6); }
+.botoes .botao-secundario { font-size: 16px; line-height: 24px; padding: 10px var(--espaco-4); text-decoration: none; }
+a.botao { text-decoration: none; }
+
 @media (max-width: 560px) {
+  .menu a { padding: 6px var(--espaco-2); }
   .topo { padding: var(--espaco-3) var(--espaco-4); }
   .topo .usuario { display: none; }
   .titulo-2 { font-size: 24px; line-height: 30px; }

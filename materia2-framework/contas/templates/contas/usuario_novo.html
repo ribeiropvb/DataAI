@@ -1,0 +1,36 @@
+{% extends 'contas/base.html' %}
+{% block title %}Novo usuário · DataAI{% endblock %}
+{% block content %}
+<section>
+  <a class="corpo-p" href="{% url 'contas:usuarios' %}">← Usuários</a>
+  <h1 class="titulo-2 com-voltar">Novo usuário</h1>
+  <p class="suave">A pessoa entra com o usuário e a senha definidos aqui.</p>
+</section>
+
+<form method="post" class="cartao formulario" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+  <div class="aviso aviso-erro" role="alert"><span aria-hidden="true">✕</span><span><strong>Erro:</strong> {{ form.non_field_errors|join:" " }}</span></div>
+  {% endif %}
+  <div class="campos-duplos">
+    {% for campo in form %}{% if campo.name != 'is_staff' %}
+    <div class="campo{% if campo.errors %} com-erro{% endif %}">
+      <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+      {{ campo }}
+      {% if campo.errors %}<p class="erro-campo">✕ {{ campo.errors|join:" " }}</p>{% elif campo.help_text and campo.name != 'password1' %}<p class="ajuda">{{ campo.help_text|safe }}</p>{% endif %}
+    </div>
+    {% endif %}{% endfor %}
+  </div>
+  {% if form.is_staff %}
+  <label class="caixa">
+    {{ form.is_staff }}
+    <span><strong>{{ form.is_staff.label }}</strong><br><span class="corpo-p suave">{{ form.is_staff.help_text }}</span></span>
+  </label>
+  {% endif %}
+  <p class="ajuda">A senha precisa ter pelo menos 8 caracteres, não pode ser só números, muito comum nem parecida com o nome.</p>
+  <div class="botoes">
+    <a class="botao botao-secundario" href="{% url 'contas:usuarios' %}">Cancelar</a>
+    <button type="submit" class="botao">Cadastrar</button>
+  </div>
+</form>
+{% endblock %}
