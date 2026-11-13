@@ -1,0 +1,33 @@
+{% extends 'contas/base.html' %}
+{% block title %}Início · DataAI{% endblock %}
+{% block content %}
+<section class="boas-vindas">
+  <h1 class="titulo-2">Olá, {{ user.first_name|default:user.username }}</h1>
+  <p class="suave">Envie arquivos CSV ou Excel, faça uma pergunta e receba um relatório em PDF, um dashboard em HTML, ou os dois.</p>
+</section>
+
+<section class="grade" aria-label="Recursos">
+  <a class="cartao recurso recurso-link" href="{% url 'dados:inicio' %}">
+    <span class="selo selo-marca">Arquivos</span>
+    <h2>Enviar dados</h2>
+    <p class="corpo-p suave">Envie planilhas CSV ou Excel e organize em pastas.</p>
+  </a>
+  <article class="cartao recurso">
+    <span class="selo">Em breve</span>
+    <h2>Minhas análises</h2>
+    <p class="corpo-p suave">Relatórios e dashboards gerados, com o resumo de cada execução.</p>
+  </article>
+  {% if user.is_staff or user.is_superuser %}
+  <a class="cartao recurso recurso-link" href="{% url 'contas:usuarios' %}">
+    <span class="selo selo-marca">Administração</span>
+    <h2>Usuários</h2>
+    <p class="corpo-p suave">Cadastre pessoas e bloqueie ou reative o acesso.</p>
+  </a>
+  {% endif %}
+  <article class="cartao recurso">
+    <span class="selo">Em breve</span>
+    <h2>Conta</h2>
+    <p class="corpo-p suave">Dados de acesso de <span class="codigo">{{ user.username }}</span>.</p>
+  </article>
+</section>
+{% endblock %}

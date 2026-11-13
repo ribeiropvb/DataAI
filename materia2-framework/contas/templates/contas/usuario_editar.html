@@ -1,0 +1,45 @@
+{% extends 'contas/base.html' %}
+{% block title %}Editar {{ alvo.username }} · DataAI{% endblock %}
+{% block content %}
+<section>
+  <a class="corpo-p" href="{% url 'contas:usuarios' %}">← Usuários</a>
+  <h1 class="titulo-2 com-voltar">Editar usuário</h1>
+  <p class="suave">Alterando os dados de <span class="codigo">{{ alvo.username }}</span>.</p>
+</section>
+
+<form method="post" class="cartao formulario" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+  <div class="aviso aviso-erro" role="alert"><span aria-hidden="true">✕</span><span><strong>Erro:</strong> {{ form.non_field_errors|join:" " }}</span></div>
+  {% endif %}
+
+  <div class="campos-duplos">
+    {% for campo in form %}{% if campo.name in 'username first_name last_name email' %}
+    {% include 'contas/_campo.html' %}
+    {% endif %}{% endfor %}
+  </div>
+
+  {% if form.is_active or form.is_staff %}
+  <h2 class="secao-form">Acesso</h2>
+  {% for campo in form %}{% if campo.name == 'is_active' or campo.name == 'is_staff' %}
+  <label class="caixa">
+    {{ campo }}
+    <span><strong>{{ campo.label }}</strong><br><span class="corpo-p suave">{{ campo.help_text }}</span></span>
+  </label>
+  {% endif %}{% endfor %}
+  {% endif %}
+
+  <h2 class="secao-form">Trocar senha</h2>
+  <p class="ajuda">Deixe em branco para manter a senha atual.</p>
+  <div class="campos-duplos">
+    {% for campo in form %}{% if campo.name == 'nova_senha1' or campo.name == 'nova_senha2' %}
+    {% include 'contas/_campo.html' %}
+    {% endif %}{% endfor %}
+  </div>
+
+  <div class="botoes">
+    <a class="botao botao-secundario" href="{% url 'contas:usuarios' %}">Cancelar</a>
+    <button type="submit" class="botao">Salvar</button>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% load static %}<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>{% block title %}DataAI{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'contas/dataai-marca-escuro.svg' %}">
+  <link rel="stylesheet" href="{% static 'contas/dataai.css' %}">
+</head>
+<body>
+  {% block corpo %}
+  <header class="topo">
+    <a class="marca marca-topo" href="{% url 'contas:home' %}">
+      <img src="{% static 'contas/dataai-marca-escuro.svg' %}" alt="">
+      <span>DataAI</span>
+    </a>
+    {% if user.is_authenticated %}
+    <nav class="menu" aria-label="Principal">
+      <a href="{% url 'contas:home' %}"{% if request.resolver_match.url_name == 'home' %} aria-current="page"{% endif %}>Início</a>
+      <a href="{% url 'dados:inicio' %}"{% if request.resolver_match.app_name == 'dados' %} aria-current="page"{% endif %}>Arquivos</a>
+      {% if user.is_staff or user.is_superuser %}
+      <a href="{% url 'contas:usuarios' %}"{% if request.resolver_match.url_name in 'usuarios novo_usuario editar_usuario' %} aria-current="page"{% endif %}>Usuários</a>
+      {% endif %}
+    </nav>
+    <form method="post" action="{% url 'contas:logout' %}">
+      {% csrf_token %}
+      <span class="usuario corpo-p suave">{{ user }}</span>
+      <button type="submit" class="botao botao-secundario">Sair</button>
+    </form>
+    {% endif %}
+  </header>
+  <main class="conteudo">
+    {% for m in messages %}
+    <div class="aviso {% if m.level_tag == 'error' %}aviso-erro{% else %}aviso-sucesso{% endif %}" role="status">
+      <span aria-hidden="true">{% if m.level_tag == 'error' %}✕{% else %}✓{% endif %}</span>
+      <span><strong>{% if m.level_tag == 'error' %}Erro:{% else %}Feito:{% endif %}</strong> {{ m }}</span>
+    </div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+  {% endblock %}
+</body>
+</html>

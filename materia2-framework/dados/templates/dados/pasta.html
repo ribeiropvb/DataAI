@@ -1,0 +1,155 @@
+{% extends 'contas/base.html' %}
+{% block title %}{% if pasta %}{{ pasta.nome }}{% else %}Arquivos{% endif %} · DataAI{% endblock %}
+{% block content %}
+<section class="cabecalho-pagina">
+  <div>
+    {% include 'dados/_caminho.html' %}
+    <h1 class="titulo-2 com-voltar">{% if pasta %}{{ pasta.nome }}{% elif dono == user %}Meus arquivos{% else %}Arquivos de {{ dono.get_full_name|default:dono.username }}{% endif %}</h1>
+  </div>
+  {% if usuarios %}
+  <form method="get" action="{% url 'dados:inicio' %}" class="filtro-usuario">
+    <label for="filtro-usuario" class="corpo-p">Ver arquivos de</label>
+    <select id="filtro-usuario" name="usuario" onchange="this.form.submit()">
+      {% for u in usuarios %}
+      <option value="{{ u.pk }}"{% if u.pk == dono.pk %} selected{% endif %}>{{ u.get_full_name|default:u.username }}{% if u == user %} (você){% endif %}</option>
+      {% endfor %}
+    </select>
+    <noscript><button type="submit" class="botao botao-secundario">Ver</button></noscript>
+  </form>
+  {% endif %}
+</section>
+
+{% if not pode_editar %}
+<div class="aviso aviso-info" role="status">
+  <span aria-hidden="true">ⓘ</span>
+  <span><strong>Somente leitura:</strong> você está vendo os arquivos de {{ dono.get_full_name|default:dono.username }} como root. Dá para abrir e baixar, mas não alterar.</span>
+</div>
+{% endif %}
+
+{% if pode_editar %}
+<section class="painel-acoes">
+  <form method="post" action="{% url 'dados:enviar' %}" enctype="multipart/form-data" class="cartao envio{% if form_envio.errors %} com-erro{% endif %}">
+    {% csrf_token %}
+    {% if pasta %}<input type="hidden" name="pasta" value="{{ pasta.pk }}">{% endif %}
+    <label for="{{ form_envio.arquivos.id_for_label }}" class="area-envio">
+      <span class="icone-envio">{% include 'dados/_icones.html' with icone='enviar' %}</span>
+      <span><strong>Escolha os arquivos</strong> ou arraste para cá</span>
+      <span class="ajuda">.xlsx, .xls ou .csv · até 20 MB cada · pode escolher vários</span>
+      <span class="selecionados ajuda" data-vazio="Nenhum arquivo escolhido">Nenhum arquivo escolhido</span>
+      {{ form_envio.arquivos }}
+    </label>
+    {% if form_envio.errors %}
+    <div class="aviso aviso-erro" role="alert">
+      <span aria-hidden="true">✕</span>
+      <span><strong>Erro:</strong> nada foi enviado.<br>{% for e in form_envio.arquivos.errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>
+    </div>
+    {% endif %}
+    <button type="submit" class="botao botao-largo">Enviar{% if pasta %} para "{{ pasta.nome }}"{% endif %}</button>
+  </form>
+
+  <div class="cartao gestao-pasta">
+    <form method="post" action="{% url 'dados:nova_pasta' %}" class="linha-form">
+      {% csrf_token %}
+      {% if pasta %}<input type="hidden" name="mae" value="{{ pasta.pk }}">{% endif %}
+      <div class="campo{% if form_pasta.errors %} com-erro{% endif %}">
+        <label for="{{ form_pasta.nome.id_for_label }}">{% if pasta %}Nova subpasta{% else %}Nova pasta{% endif %}</label>
+        <div class="campo-com-botao">
+          {{ form_pasta.nome }}
+          <button type="submit" class="botao botao-secundario">{% include 'dados/_icones.html' with icone='nova-pasta' %} Criar</button>
+        </div>
+        {% if form_pasta.nome.errors %}<p class="erro-campo">✕ {{ form_pasta.nome.errors|join:" " }}</p>{% endif %}
+      </div>
+    </form>
+    {% if pasta %}
+    <form method="post" action="{% url 'dados:renomear_pasta' pasta.pk %}" class="linha-form">
+      {% csrf_token %}
+      <div class="campo">
+        <label for="renomear-nome">Renomear esta pasta</label>
+        <div class="campo-com-botao">
+          <input type="text" id="renomear-nome" name="nome" value="{{ pasta.nome }}" maxlength="120" required>
+          <button type="submit" class="botao botao-secundario">Salvar</button>
+        </div>
+      </div>
+    </form>
+    <form method="post" action="{% url 'dados:excluir_pasta' pasta.pk %}" onsubmit="return confirm('Excluir a pasta &quot;{{ pasta.nome|escapejs }}&quot;? Os arquivos e subpastas dela vão para {% if pasta.mae %}a pasta &quot;{{ pasta.mae.nome|escapejs }}&quot;{% else %}o início{% endif %}.');">
+      {% csrf_token %}
+      <button type="submit" class="botao botao-perigo">Excluir pasta</button>
+      <p class="ajuda">Os arquivos dela não são apagados: sobem um nível.</p>
+    </form>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<div class="cartao tabela-envoltorio">
+  {% if subpastas or arquivos %}
+  <table class="tabela">
+    <thead>
+      <tr>
+        <th scope="col">Nome</th>
+        <th scope="col">Tipo</th>
+        <th scope="col" class="num">Linhas</th>
+        <th scope="col" class="num">Tamanho</th>
+        <th scope="col">Enviado em</th>
+        <th scope="col"><span class="sr">Ações</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in subpastas %}
+      <tr>
+        <td><a class="item" href="{% url 'dados:pasta' p.pk %}"><span class="icone-item">{% include 'dados/_icones.html' with icone='pasta' %}</span>{{ p.nome }}</a></td>
+        <td class="suave">Pasta</td>
+        <td class="num suave">—</td>
+        <td class="num suave">—</td>
+        <td class="suave">—</td>
+        <td></td>
+      </tr>
+      {% endfor %}
+      {% for a in arquivos %}
+      <tr>
+        <td><a class="item" href="{% url 'dados:arquivo' a.pk %}"><span class="icone-item">{% include 'dados/_icones.html' with icone='planilha' %}</span>{{ a.nome_original }}</a></td>
+        <td><span class="selo codigo">{{ a.extensao }}</span>{% if a.abas|length > 1 %} <span class="suave corpo-p">{{ a.abas|length }} abas</span>{% endif %}</td>
+        <td class="num">{{ a.total_linhas }}</td>
+        <td class="num">{{ a.tamanho|filesizeformat }}</td>
+        <td>{{ a.enviado_em|date:"d/m/Y H:i" }}</td>
+        <td class="acoes"><a class="botao-icone" href="{% url 'dados:baixar' a.pk %}" title="Baixar {{ a.nome_original }}" aria-label="Baixar {{ a.nome_original }}">{% include 'dados/_icones.html' with icone='baixar' %}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="vazio">
+    <span class="icone-item">{% include 'dados/_icones.html' with icone='pasta' %}</span>
+    <p><strong>{% if pasta %}Esta pasta está vazia.{% else %}Nenhum arquivo ainda.{% endif %}</strong></p>
+    {% if pode_editar %}<p class="corpo-p suave">Envie planilhas acima ou crie pastas para organizar.</p>{% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<script>
+  (function () {
+    var entrada = document.querySelector('.area-envio input[type=file]');
+    if (!entrada) return;
+    var rotulo = document.querySelector('.area-envio .selecionados');
+    var area = document.querySelector('.area-envio');
+    function mostrar() {
+      var n = entrada.files.length;
+      rotulo.textContent = n === 0 ? rotulo.dataset.vazio
+        : n === 1 ? entrada.files[0].name
+        : n + ' arquivos: ' + Array.prototype.map.call(entrada.files, function (f) { return f.name; }).join(', ');
+    }
+    entrada.addEventListener('change', mostrar);
+    ['dragenter', 'dragover'].forEach(function (ev) {
+      area.addEventListener(ev, function (e) { e.preventDefault(); area.classList.add('arrastando'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+      area.addEventListener(ev, function () { area.classList.remove('arrastando'); });
+    });
+    area.addEventListener('drop', function (e) {
+      e.preventDefault();
+      entrada.files = e.dataTransfer.files;
+      mostrar();
+    });
+  })();
+</script>
+{% endblock %}
