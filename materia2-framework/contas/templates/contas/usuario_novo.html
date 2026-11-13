@@ -14,11 +14,7 @@
   {% endif %}
   <div class="campos-duplos">
     {% for campo in form %}{% if campo.name != 'is_staff' %}
-    <div class="campo{% if campo.errors %} com-erro{% endif %}">
-      <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
-      {{ campo }}
-      {% if campo.errors %}<p class="erro-campo">✕ {{ campo.errors|join:" " }}</p>{% elif campo.help_text and campo.name != 'password1' %}<p class="ajuda">{{ campo.help_text|safe }}</p>{% endif %}
-    </div>
+    {% include 'contas/_campo.html' %}
     {% endif %}{% endfor %}
   </div>
   {% if form.is_staff %}

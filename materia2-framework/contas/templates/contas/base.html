@@ -19,7 +19,7 @@
     <nav class="menu" aria-label="Principal">
       <a href="{% url 'contas:home' %}"{% if request.resolver_match.url_name == 'home' %} aria-current="page"{% endif %}>Início</a>
       {% if user.is_staff or user.is_superuser %}
-      <a href="{% url 'contas:usuarios' %}"{% if request.resolver_match.url_name in 'usuarios novo_usuario' %} aria-current="page"{% endif %}>Usuários</a>
+      <a href="{% url 'contas:usuarios' %}"{% if request.resolver_match.url_name in 'usuarios novo_usuario editar_usuario' %} aria-current="page"{% endif %}>Usuários</a>
       {% endif %}
     </nav>
     <form method="post" action="{% url 'contas:logout' %}">

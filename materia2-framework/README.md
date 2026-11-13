@@ -6,7 +6,7 @@ Primeira parte: página de login e página inicial (home) protegida.
 
 - **Tabela própria de usuários:** o modelo `contas.Usuario` (tabela `contas_usuario` no SQLite) substitui o usuário padrão do Django (`AUTH_USER_MODEL`). Herda senha com hash e permissões, com e-mail único, e pode ganhar campos novos sem trocar de tabela.
 - **Login** em `/login/`, **home** em `/` (só para quem está logado) e **sair** pelo botão no topo.
-- **Cadastro de usuários** em `/usuarios/`, só para administradores (`is_staff`) e root (`is_superuser`): lista quem tem acesso, cadastra pessoas novas e bloqueia ou reativa o acesso. Só o root pode criar outro administrador ou bloquear um administrador, e ninguém bloqueia a si mesmo.
+- **Cadastro de usuários** em `/usuarios/`, só para administradores (`is_staff`) e root (`is_superuser`): lista quem tem acesso, cadastra pessoas novas e edita os dados pelo ícone de lápis (nome, e-mail, usuário, senha e o campo "Acesso ativo", que desativa a conta sem apagá-la). Só o root edita administradores e muda o perfil de administrador, e ninguém desativa a própria conta.
 - **Admin** do Django em `/admin/`, para casos fora do site.
 - **Identidade visual** do DataAI em tema escuro (tokens da skill `brand-identity`, IBM Plex e o símbolo), em `contas/static/contas/`.
 
