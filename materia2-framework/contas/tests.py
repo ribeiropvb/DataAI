@@ -25,7 +25,7 @@ class LoginHomeTests(TestCase):
         resposta = self.client.post(
             reverse('contas:login'), {'username': 'ana', 'password': 'errada'}
         )
-        self.assertContains(resposta, 'Usuário ou senha incorretos')
+        self.assertContains(resposta, 'usuário ou senha incorretos')
 
     def test_logout_volta_para_login(self):
         self.client.force_login(self.usuario)

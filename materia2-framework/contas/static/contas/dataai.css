@@ -1,0 +1,187 @@
+/* DataAI · tema escuro
+   Valores copiados de materia1-dataai/dataai/brand/tokens.json (skill brand-identity).
+   Uma cor nova entra primeiro no tokens.json e só depois aqui. */
+
+@font-face { font-family: "IBM Plex Sans"; src: url("fonts/IBMPlexSans-Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "IBM Plex Sans"; src: url("fonts/IBMPlexSans-Medium.ttf") format("truetype"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "IBM Plex Sans"; src: url("fonts/IBMPlexSans-SemiBold.ttf") format("truetype"); font-weight: 600; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("fonts/IBMPlexMono-Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+
+:root {
+  color-scheme: dark;
+
+  /* Interface (tema escuro) */
+  --fundo: #0E161A;
+  --superficie: #152025;
+  --superficie-elevada: #1C2A30;
+  --linha: #2A3A41;
+  --tinta: #E2E9EC;
+  --tinta-suave: #B7C3C9;
+  --marca: #57B0C5;
+  --marca-forte: #8CCDDD;
+  --sobre-marca: #001F26;
+  --foco: #8CCDDD;
+  --erro: #F98F87;
+  --erro-fundo: #4B1D1B;
+  --info: #9AC0F8;
+  --info-fundo: #1B2C44;
+
+  /* Espaço e forma (grade de 4 px) */
+  --espaco-1: 4px;
+  --espaco-2: 8px;
+  --espaco-3: 12px;
+  --espaco-4: 16px;
+  --espaco-6: 24px;
+  --espaco-8: 32px;
+  --espaco-12: 48px;
+  --raio-m: 8px;
+  --raio-g: 12px;
+  --raio-pilula: 999px;
+
+  --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", Consolas, ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+body {
+  min-height: 100vh;
+  background: var(--fundo);
+  color: var(--tinta);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 24px;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--marca); }
+
+:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+
+/* Tipografia (escala da marca) */
+.titulo-2 { font-size: 30px; line-height: 36px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+.titulo-3 { font-size: 24px; line-height: 30px; font-weight: 600; margin: 0; }
+.corpo-p { font-size: 14px; line-height: 20px; }
+.rotulo { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tinta-suave); }
+.suave { color: var(--tinta-suave); }
+.codigo { font-family: var(--font-mono); font-size: 13px; }
+
+/* Marca */
+.marca { display: flex; align-items: center; gap: var(--espaco-3); text-decoration: none; color: var(--tinta); }
+.marca img { width: 40px; height: 40px; display: block; }
+.marca span { font-size: 20px; line-height: 28px; font-weight: 600; }
+
+/* Cabeçalho */
+.topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-4);
+  padding: var(--espaco-3) var(--espaco-6);
+  background: var(--superficie);
+  border-bottom: 1px solid var(--linha);
+}
+.topo form { display: flex; align-items: center; gap: var(--espaco-3); margin: 0; }
+
+/* Conteúdo */
+.conteudo { max-width: 1040px; margin: 0 auto; padding: var(--espaco-8) var(--espaco-4); }
+.conteudo > * + * { margin-top: var(--espaco-6); }
+
+.cartao {
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio-g);
+  padding: var(--espaco-6);
+}
+
+.grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--espaco-4);
+}
+.grade .cartao { padding: var(--espaco-4); }
+.recurso h2 { margin: var(--espaco-3) 0 0; font-size: 16px; line-height: 24px; font-weight: 600; }
+.recurso p { margin: var(--espaco-1) 0 0; }
+.boas-vindas p { margin: var(--espaco-2) 0 0; }
+.marca-topo span { font-size: 16px; line-height: 24px; }
+
+.selo {
+  display: inline-block;
+  padding: 2px var(--espaco-3);
+  border-radius: var(--raio-pilula);
+  background: var(--superficie-elevada);
+  border: 1px solid var(--linha);
+  color: var(--tinta-suave);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+}
+
+/* Login */
+.tela-login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--espaco-6) var(--espaco-4);
+}
+.login { width: 100%; max-width: 400px; }
+.login .marca { margin-bottom: var(--espaco-6); }
+.login .titulo-3 + p { margin: var(--espaco-2) 0 var(--espaco-6); }
+.rodape-login { margin-top: var(--espaco-6); text-align: center; }
+
+/* Formulário */
+.campo + .campo { margin-top: var(--espaco-4); }
+.campo label { display: block; margin-bottom: var(--espaco-2); font-size: 14px; line-height: 20px; font-weight: 500; }
+.campo input {
+  width: 100%;
+  padding: 10px var(--espaco-3);
+  background: var(--fundo);
+  color: var(--tinta);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio-m);
+  font: inherit;
+}
+.campo input:hover { border-color: var(--tinta-suave); }
+.campo input:focus { outline: 2px solid var(--foco); outline-offset: 0; border-color: transparent; }
+
+.botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espaco-2);
+  padding: 10px var(--espaco-4);
+  border-radius: var(--raio-m);
+  border: 1px solid var(--marca);
+  background: var(--marca);
+  color: var(--sobre-marca);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.botao:hover { background: var(--marca-forte); border-color: var(--marca-forte); }
+.botao-largo { width: 100%; margin-top: var(--espaco-6); }
+.botao-secundario { background: transparent; color: var(--tinta); border-color: var(--linha); font-size: 14px; line-height: 20px; padding: 6px var(--espaco-3); }
+.botao-secundario:hover { background: var(--superficie-elevada); border-color: var(--linha); }
+
+/* Estados do sistema: sempre com ícone e palavra */
+.aviso {
+  display: flex;
+  gap: var(--espaco-2);
+  align-items: flex-start;
+  margin-top: var(--espaco-4);
+  padding: var(--espaco-3);
+  border-radius: var(--raio-m);
+  font-size: 14px;
+  line-height: 20px;
+}
+.aviso-erro { background: var(--erro-fundo); color: var(--erro); }
+.aviso-info { background: var(--info-fundo); color: var(--info); }
+
+@media (max-width: 560px) {
+  .topo { padding: var(--espaco-3) var(--espaco-4); }
+  .topo .usuario { display: none; }
+  .titulo-2 { font-size: 24px; line-height: 30px; }
+}

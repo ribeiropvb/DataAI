@@ -1,20 +1,37 @@
 {% extends 'contas/base.html' %}
+{% load static %}
 {% block title %}Entrar · DataAI{% endblock %}
-{% block content %}
-<div class="cartao login">
-  <h1>Entrar</h1>
-  <p class="suave">Acesse o DataAI com seu usuário e senha.</p>
-  <form method="post">
-    {% csrf_token %}
-    <label for="id_username">Usuário</label>
-    {{ form.username }}
-    <label for="id_password">Senha</label>
-    {{ form.password }}
-    {% if form.non_field_errors %}
-      <p class="erro">Usuário ou senha incorretos.</p>
-    {% endif %}
-    <input type="hidden" name="next" value="{{ next }}">
-    <button type="submit">Entrar</button>
-  </form>
-</div>
+{% block corpo %}
+<main class="tela-login">
+  <div class="login">
+    <div class="marca">
+      <img src="{% static 'contas/dataai-marca-escuro.svg' %}" alt="">
+      <span>DataAI</span>
+    </div>
+    <div class="cartao">
+      <h1 class="titulo-3">Entrar</h1>
+      <p class="corpo-p suave">Use seu usuário e senha para acessar suas análises.</p>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="campo">
+          <label for="id_username">Usuário</label>
+          <input type="text" name="username" id="id_username" value="{{ form.username.value|default:'' }}" autocomplete="username" autofocus required>
+        </div>
+        <div class="campo">
+          <label for="id_password">Senha</label>
+          <input type="password" name="password" id="id_password" autocomplete="current-password" required>
+        </div>
+        {% if form.errors %}
+        <div class="aviso aviso-erro" role="alert">
+          <span aria-hidden="true">✕</span>
+          <span><strong>Erro:</strong> usuário ou senha incorretos.</span>
+        </div>
+        {% endif %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <button type="submit" class="botao botao-largo">Entrar</button>
+      </form>
+    </div>
+    <p class="rodape-login corpo-p suave">Análise de dados com agentes de IA para quem não programa.</p>
+  </div>
+</main>
 {% endblock %}
